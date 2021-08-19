@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+
+    <Appenders>
+        <Console name="ConsoleInfo" target="SYSTEM_OUT">
+            <PatternLayout pattern="%highlight{[%p]    %d{yyyy-MM-dd HH:mm:ss.SSS}|%logger|%msg %n}{FATAL=red, ERROR=red, WARN=yellow, INFO=cyan, DEBUG=blue,TRACE=blue}"/>
+        </Console>
+
+        <Console name="ConsoleError" target="SYSTEM_ERR">
+            <PatternLayout pattern="%highlight{[%p]    %d{yyyy-MM-dd HH:mm:ss.SSS}|%logger|%l|%msg %n}{FATAL=red, ERROR=red, WARN=yellow, INFO=cyan, DEBUG=blue,TRACE=blue}"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="DEBUG" additivity="false">
+            <AppenderRef ref="ConsoleInfo">
+                <!-- Without error and fatal -->
+                <Filters>
+                    <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="ACCEPT"/>
+                    <ThresholdFilter level="FATAL" onMatch="DENY" onMismatch="ACCEPT"/>
+                </Filters>
+
+            </AppenderRef>
+
+            <AppenderRef ref="ConsoleError">
+                <!-- Only error and fatal -->
+                <Filters>
+                    <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+                    <ThresholdFilter level="FATAL" onMatch="ACCEPT" onMismatch="DENY"/>
+                </Filters>
+            </AppenderRef>
+        </Root>
+
+        <logger name="empty" level="FATAL">
+
+        </logger>
+
+    </Loggers>
+</Configuration>
