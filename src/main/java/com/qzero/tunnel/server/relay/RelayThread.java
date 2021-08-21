@@ -1,4 +1,4 @@
-package com.qzero.tunnel.relay;
+package com.qzero.tunnel.server.relay;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +9,6 @@ import java.net.Socket;
 
 public class RelayThread extends Thread {
 
-    private byte[] preSentBytes;
     private Socket source;
     private Socket destination;
 
@@ -17,8 +16,7 @@ public class RelayThread extends Thread {
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
-    public RelayThread(byte[] preSentBytes, Socket source, Socket destination, ClientDisconnectedListener listener) {
-        this.preSentBytes = preSentBytes;
+    public RelayThread(Socket source, Socket destination, ClientDisconnectedListener listener) {
         this.source = source;
         this.destination = destination;
         this.listener=listener;
@@ -32,13 +30,9 @@ public class RelayThread extends Thread {
             InputStream sourceIs=source.getInputStream();
             OutputStream dstOs=destination.getOutputStream();
 
-            if(preSentBytes!=null){
-                dstOs.write(preSentBytes);
-            }
-
             byte[] buf=new byte[102400];
             int len;
-            while (true){
+            while (!isInterrupted()){
                 len=sourceIs.read(buf);
                 if(len==-1){
                     break;
@@ -46,10 +40,15 @@ public class RelayThread extends Thread {
                 dstOs.write(buf,0,len);
             }
         }catch (Exception e){
-            log.debug("Route failed",e);
+            if(isInterrupted()){
+                log.info(String.format("Relay route from %s to %s has been interrupted",
+                        source.getInetAddress().getHostAddress(),destination.getInetAddress().getHostAddress()));
+                return;
+            }
+            log.debug(String.format("Relay failed, route from %s to %s has crashed",
+                    source.getInetAddress().getHostAddress(),destination.getInetAddress().getHostAddress()),e);
         }
 
         listener.onDisconnected();
-
     }
 }

@@ -1,4 +1,4 @@
-package com.qzero.tunnel.relay;
+package com.qzero.tunnel.server.relay;
 
 public interface ClientDisconnectedListener {
 

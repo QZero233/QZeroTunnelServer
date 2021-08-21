@@ -1,4 +1,4 @@
-package com.qzero.tunnel.utils;
+package com.qzero.tunnel.server.utils;
 
 import java.util.UUID;
 
