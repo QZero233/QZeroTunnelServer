@@ -47,8 +47,8 @@ public class TunnelServerThread extends Thread {
                 if(!clientContainer.isClientOnline(clientIdOfOpener)){
                     try {
                         socket.close();
-                        log.info(String.format("Close connection with client %s, for opener is not online", ip));
-                        log.info(String.format("Close tunnel on port %d, for opener is not online", tunnelPort));
+                        log.debug(String.format("Close connection with client %s, for opener is not online", ip));
+                        log.debug(String.format("Close tunnel on port %d, for opener is not online", tunnelPort));
                         GlobalTunnelManager.getInstance().closeTunnel(tunnelPort);
                     }catch (Exception e){
                     }
@@ -65,7 +65,7 @@ public class TunnelServerThread extends Thread {
             }
         } catch (Exception e) {
             if(isInterrupted()){
-                log.info(String.format("Tunnel on port %d has been closed", tunnelPort));
+                log.debug(String.format("Tunnel on port %d has been closed", tunnelPort));
                 return;
             }
             log.error(String.format("Failed to accept tunnel client on port %d, no more client will be accepted from now on",

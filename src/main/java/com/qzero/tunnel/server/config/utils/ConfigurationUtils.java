@@ -1,16 +1,19 @@
-package com.qzero.tunnel.server.utils;
+package com.qzero.tunnel.server.config.utils;
+
+import com.qzero.tunnel.server.utils.StreamUtils;
 
 import java.beans.Transient;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class ConfigurationUtils {
 
     public static Map<String,String> readConfiguration(File configFile) throws IOException {
-        byte[] buf=StreamUtils.readFile(configFile);
+        byte[] buf= StreamUtils.readFile(configFile);
         if(buf==null)
             throw new IllegalArgumentException("Configuration file is empty");
 
@@ -80,29 +83,40 @@ public class ConfigurationUtils {
         writeConfiguration(configFile,config);
     }
 
-    public static<T> T configToJavaBeanWithOnlyStringFields(Map<String,String> config, Class<T> cls) throws IllegalAccessException, InstantiationException {
+    public static<T> T configToJavaBeanWithOnlyStringFields(Map<String,String> config, Class<T> cls) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         Field[] fields=cls.getDeclaredFields();
-        T result=cls.newInstance();
+        T result=cls.getDeclaredConstructor().newInstance();
         for(Field field:fields){
             int modifiers=field.getModifiers();
             if(Modifier.isFinal(modifiers) || Modifier.isStatic(modifiers))
                 continue;
 
-            if(!field.getType().equals(String.class))
-                continue;
-
             if(field.getAnnotation(Transient.class)!=null)
                 continue;
-
-            field.setAccessible(true);
 
             String key=field.getName();
             if(!config.containsKey(key))
                 continue;
-
             String value=config.get(key);
 
-            field.set(result,value);
+            ConfigValueConvert convertAnnotation=field.getAnnotation(ConfigValueConvert.class);
+            if(convertAnnotation==null && !field.getType().equals(String.class))
+                continue;
+
+            if(convertAnnotation!=null){
+                ConfigFieldConverter converter=convertAnnotation.converter().getDeclaredConstructor().newInstance();
+                if(!field.getType().equals(converter.dstType()))
+                    throw new IllegalArgumentException(String.format("Wrong type, expected %s but not %s",
+                            field.getType().getName(),converter.dstType().getName()));
+
+                Object dst=converter.convert(value);
+                field.setAccessible(true);
+                field.set(result,dst);
+            }else{
+                field.setAccessible(true);
+                field.set(result,value);
+            }
+
         }
         return result;
     }

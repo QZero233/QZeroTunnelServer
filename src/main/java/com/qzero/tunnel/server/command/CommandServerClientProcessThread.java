@@ -1,7 +1,8 @@
 package com.qzero.tunnel.server.command;
 
 import com.qzero.tunnel.server.GlobalCommandServerClientContainer;
-import com.qzero.tunnel.server.command.executor.CommandExecutor;
+import com.qzero.tunnel.server.authorize.AuthorizeHelper;
+import com.qzero.tunnel.server.authorize.TunnelUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 
 public class CommandServerClientProcessThread extends Thread {
@@ -24,21 +24,15 @@ public class CommandServerClientProcessThread extends Thread {
 
     private String clientId;
 
-    private boolean authorized=false;
+    private TunnelUser authorizeInfo;
 
-    private static final String AUTHORIZE_CODE="123456";//FIXME config by files
-
-    private CommandExecutor executor;
-
-    public CommandServerClientProcessThread(Socket clientSocket,String clientId) throws IOException, InvocationTargetException, IllegalAccessException, NoSuchMethodException, InstantiationException {
+    public CommandServerClientProcessThread(Socket clientSocket,String clientId) throws IOException{
         this.clientSocket = clientSocket;
         this.clientId=clientId;
         clientIp=clientSocket.getInetAddress().getHostAddress();
 
         pw=new PrintWriter(clientSocket.getOutputStream());
         br=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-        executor=CommandExecutor.getInstance();
     }
 
     @Override
@@ -51,11 +45,13 @@ public class CommandServerClientProcessThread extends Thread {
         try {
             while (!isInterrupted()){
                 String commandLine=br.readLine();
+                if(commandLine==null)
+                    break;
                 processCommandLine(commandLine);
             }
         }catch (Exception e){
             if(isInterrupted()){
-                log.info(String.format("The process thread for client %s has been stopped", clientIp));
+                log.debug(String.format("The process thread for client %s has been stopped", clientIp));
                 return;
             }
             log.error("Failed to continue to interact with client "+clientIp,e);
@@ -63,7 +59,7 @@ public class CommandServerClientProcessThread extends Thread {
 
         try {
             clientSocket.close();
-            log.info("Command server lost connection with client "+clientIp);
+            log.debug("Command server lost connection with client "+clientIp);
         }catch (Exception e){
             log.error("Failed to close connection with client "+clientIp,e);
         }
@@ -83,35 +79,41 @@ public class CommandServerClientProcessThread extends Thread {
     }
 
     private void processCommandLine(String commandLine){
-        if(!authorized && !commandLine.startsWith("login")){
+        if(authorizeInfo==null && !commandLine.startsWith("login")){
             writeToClientWithLn(String.format("Failed to execute command %s, you have not logged in yet", commandLine));
             return;
         }
 
-        if(commandLine.startsWith("login")){
-            if(authorized){
+        String commandParts[]=commandLine.split(" ");
+        String commandName=commandParts[0];
+
+        if(commandName.equals("login")){
+            if(authorizeInfo!=null){
                 writeToClientWithLn("You have already logged in");
                 return;
             }
 
-            String[] commandParts=commandLine.split(" ");
-            if(commandParts.length<2){
-                writeToClientWithLn("You must add authorize code as a parameter");
+            if(commandParts.length<3){
+                writeToClientWithLn("You must add username and password as parameters");
                 return;
             }
 
-            if(commandParts[1].equals(AUTHORIZE_CODE)){
-                writeToClientWithLn("You have logged in successfully");
-                authorized=true;
-                return;
-            }else{
-                writeToClientWithLn("Wrong authorize code, please check and try again");
+            try {
+                if(!AuthorizeHelper.checkAuthorize(new TunnelUser(commandParts[1],commandParts[2]))){
+                    writeToClientWithLn("Login failed, please check and try again");
+                    return;
+                }
+
+                authorizeInfo=AuthorizeHelper.getUser(commandParts[1]);
+                writeToClientWithLn("You have logged in successfully, welcome user "+authorizeInfo.getUsername());
+            }catch (Exception e){
+                log.error(String.format("Failed to login(command line : %s)", commandLine),e);
+                writeToClientWithLn("Login failed, some error occurred, please contact admin for detailed log");
                 return;
             }
         }
 
-        String returnMsg=executor.executeCommand(commandLine);
-        writeToClientWithLn(returnMsg);
+        //TODO process commands
     }
 
 }
