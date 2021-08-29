@@ -1,8 +1,7 @@
 package com.qzero.tunnel.server.tunnel;
 
 import com.qzero.tunnel.server.GlobalCommandServerClientContainer;
-import com.qzero.tunnel.server.GlobalTunnelManager;
-import com.qzero.tunnel.server.command.CommandServerClientOperator;
+import com.qzero.tunnel.server.command.CommandServerClientProcessThread;
 import com.qzero.tunnel.server.relay.RelaySession;
 import com.qzero.tunnel.server.relay.RelaySessionContainer;
 import com.qzero.tunnel.server.utils.UUIDUtils;
@@ -19,15 +18,15 @@ public class TunnelServerThread extends Thread {
 
     private int tunnelPort;
 
-    private String clientIdOfOpener;
+    private String usernameOfOpener;
 
     private ServerSocket serverSocket;
 
     private GlobalCommandServerClientContainer clientContainer=GlobalCommandServerClientContainer.getInstance();
 
-    public TunnelServerThread(int tunnelPort,String clientIdOfOpener) throws IOException {
+    public TunnelServerThread(int tunnelPort,String usernameOfOpener) throws IOException {
         this.tunnelPort = tunnelPort;
-        this.clientIdOfOpener=clientIdOfOpener;
+        this.usernameOfOpener =usernameOfOpener;
         serverSocket=new ServerSocket(tunnelPort);
     }
 
@@ -35,7 +34,7 @@ public class TunnelServerThread extends Thread {
     public void run() {
         super.run();
 
-        log.info(String.format("Tunnel has started on port %d successfully", tunnelPort));
+        log.trace(String.format("Tunnel has started on port %d successfully", tunnelPort));
 
         RelaySessionContainer relaySessionContainer=RelaySessionContainer.getInstance();
 
@@ -44,12 +43,10 @@ public class TunnelServerThread extends Thread {
                 Socket socket = serverSocket.accept();
                 String ip = socket.getInetAddress().getHostAddress();
 
-                if(!clientContainer.isClientOnline(clientIdOfOpener)){
+                if(!clientContainer.hasOnlineClient(usernameOfOpener)){
                     try {
                         socket.close();
-                        log.debug(String.format("Close connection with client %s, for opener is not online", ip));
-                        log.debug(String.format("Close tunnel on port %d, for opener is not online", tunnelPort));
-                        GlobalTunnelManager.getInstance().closeTunnel(tunnelPort);
+                        log.trace(String.format("Close connection with client %s, for opener is not online", ip));
                     }catch (Exception e){
                     }
                     continue;
@@ -60,15 +57,15 @@ public class TunnelServerThread extends Thread {
                 session.setDirectClient(socket);
                 relaySessionContainer.addSession(sessionId,session);
 
-                CommandServerClientOperator clientOperator=clientContainer.getClient(clientIdOfOpener);
-                clientOperator.sendCommandToClient("connect_relay_session "+sessionId);
+                CommandServerClientProcessThread processThread=clientContainer.getClient(usernameOfOpener);
+                processThread.writeToClientWithLn("connect_relay_session "+sessionId);
             }
         } catch (Exception e) {
             if(isInterrupted()){
-                log.debug(String.format("Tunnel on port %d has been closed", tunnelPort));
+                log.trace(String.format("Tunnel on port %d has been closed", tunnelPort));
                 return;
             }
-            log.error(String.format("Failed to accept tunnel client on port %d, no more client will be accepted from now on",
+            log.trace(String.format("Failed to accept tunnel client on port %d, no more client will be accepted from now on",
                     tunnelPort), e);
         }
     }

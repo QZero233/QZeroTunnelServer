@@ -1,7 +1,5 @@
 package com.qzero.tunnel.server.command;
 
-import com.qzero.tunnel.server.GlobalCommandServerClientContainer;
-import com.qzero.tunnel.server.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,23 +26,19 @@ public class CommandServerReceptionThread extends Thread{
 
         log.info(String.format("Command server has started on port %d successfully",port));
 
-        GlobalCommandServerClientContainer container=GlobalCommandServerClientContainer.getInstance();
-
         try {
             while (!isInterrupted()){
                 Socket socket=serverSocket.accept();
                 String ip=socket.getInetAddress().getHostAddress();
                 try {
-                    String clientId= UUIDUtils.getRandomUUID();
-                    CommandServerClientOperator operator=new CommandServerClientOperator(clientId,socket);
-                    container.addClient(clientId,operator);
-                    log.info(String.format("Client with ip %s has connected successfully", ip));
+                    new CommandServerClientProcessThread(socket).start();
+                    log.trace(String.format("Client with ip %s has connected successfully", ip));
                 }catch (Exception e){
-                    log.error("Failed to initialize operator for client with ip "+ip,e);
+                    log.trace("Failed to initialize operator for client with ip "+ip,e);
                 }
             }
         }catch (Exception e){
-            log.error("Failed to accept client, no more client will be accepted from now on",e);
+            log.error("Failed to accept client, no more client will be accepted from now on, command server has stopped just now",e);
         }
 
     }

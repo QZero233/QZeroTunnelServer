@@ -28,7 +28,7 @@ public class RelaySession {
             throw new IllegalStateException("Clients are not ready, failed to start relay route");
 
         ClientDisconnectedListener synchronizedDisconnectListener= () -> {
-            log.debug("Relay session stopped, for one client has disconnected");
+            log.trace("Relay session stopped, for one client has disconnected");
 
             directToTunnel.interrupt();
             tunnelToDirect.interrupt();
@@ -36,13 +36,13 @@ public class RelaySession {
             try {
                 directClient.close();
             }catch (Exception e){
-                log.error("Failed to close direct client connection",e);
+                log.trace("Failed to close direct client connection",e);
             }
 
             try {
                 tunnelClient.close();
             }catch (Exception e){
-                log.error("Failed to close tunnel client connection",e);
+                log.trace("Failed to close tunnel client connection",e);
             }
         };
 
@@ -51,6 +51,9 @@ public class RelaySession {
 
         directToTunnel.start();
         tunnelToDirect.start();
+
+        log.trace(String.format("Relay route from %s to %s has started", directClient.getInetAddress().getHostAddress(),
+                tunnelClient.getInetAddress().getHostAddress()));
     }
 
     public void stopRelay(){
@@ -61,9 +64,9 @@ public class RelaySession {
             directClient.close();
             tunnelClient.close();
         }catch (Exception e){
-            log.error("Failed to stop relay session",e);
+            log.trace("Failed to stop relay session",e);
         }
-        log.info("Relay session has stopped");
+        log.trace("Relay session has stopped");
     }
 
 }

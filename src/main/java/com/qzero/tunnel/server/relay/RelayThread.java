@@ -41,11 +41,11 @@ public class RelayThread extends Thread {
             }
         }catch (Exception e){
             if(isInterrupted()){
-                log.info(String.format("Relay route from %s to %s has been interrupted",
+                log.trace(String.format("Relay route from %s to %s has been interrupted",
                         source.getInetAddress().getHostAddress(),destination.getInetAddress().getHostAddress()));
                 return;
             }
-            log.debug(String.format("Relay failed, route from %s to %s has crashed",
+            log.trace(String.format("Relay failed, route from %s to %s has crashed",
                     source.getInetAddress().getHostAddress(),destination.getInetAddress().getHostAddress()),e);
         }
 

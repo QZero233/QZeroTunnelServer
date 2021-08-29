@@ -1,6 +1,6 @@
 package com.qzero.tunnel.server;
 
-import com.qzero.tunnel.server.command.CommandServerClientOperator;
+import com.qzero.tunnel.server.command.CommandServerClientProcessThread;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,8 @@ public class GlobalCommandServerClientContainer {
 
     private static GlobalCommandServerClientContainer instance;
 
-    private Map<String, CommandServerClientOperator> operatorMap=new HashMap<>();
+    //Key: UserName
+    private Map<String, CommandServerClientProcessThread> processThreadMap=new HashMap<>();
 
     private GlobalCommandServerClientContainer(){
 
@@ -21,20 +22,20 @@ public class GlobalCommandServerClientContainer {
         return instance;
     }
 
-    public void addClient(String clientId,CommandServerClientOperator clientOperator){
-        operatorMap.put(clientId,clientOperator);
+    public void addClient(String clientUserName,CommandServerClientProcessThread processThread){
+        processThreadMap.put(clientUserName,processThread);
     }
 
-    public CommandServerClientOperator getClient(String clientId){
-        return operatorMap.get(clientId);
+    public CommandServerClientProcessThread getClient(String clientUserName){
+        return processThreadMap.get(clientUserName);
     }
 
-    public void removeClient(String clientId){
-        operatorMap.remove(clientId);
+    public void removeClient(String clientUserName){
+        processThreadMap.remove(clientUserName);
     }
 
-    public boolean isClientOnline(String clientId){
-        return operatorMap.containsKey(clientId);
+    public boolean hasOnlineClient(String clientUserName){
+        return processThreadMap.containsKey(clientUserName);
     }
 
 }

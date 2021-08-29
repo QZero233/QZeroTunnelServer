@@ -12,7 +12,7 @@
     </Appenders>
 
     <Loggers>
-        <Root level="DEBUG" additivity="false">
+        <Root level="TRACE" additivity="false">
             <AppenderRef ref="ConsoleInfo">
                 <!-- Without error and fatal -->
                 <Filters>

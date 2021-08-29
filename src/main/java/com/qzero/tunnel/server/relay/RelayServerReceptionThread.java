@@ -35,11 +35,11 @@ public class RelayServerReceptionThread extends Thread {
                 try{
                     new RelayServerReceptionProcessThread(socket).start();
                 }catch (Exception e){
-                    log.error("Failed to initialize process thread for client with ip "+ip,e);
+                    log.trace("Failed to initialize process thread for client with ip "+ip,e);
                 }
             }
         }catch (Exception e){
-            log.error("Failed to accept relay client, no more client will be accepted from now on",e);
+            log.error("Failed to accept relay client, no more client will be accepted from now on, relay reception server has stopped just now",e);
         }
 
     }

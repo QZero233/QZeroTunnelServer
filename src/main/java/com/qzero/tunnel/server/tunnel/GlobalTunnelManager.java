@@ -1,6 +1,4 @@
-package com.qzero.tunnel.server;
-
-import com.qzero.tunnel.server.tunnel.TunnelServerThread;
+package com.qzero.tunnel.server.tunnel;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,11 +20,11 @@ public class GlobalTunnelManager {
 
     }
 
-    public void openTunnel(int port,String clientIdOfOpener) throws IOException {
+    public void openTunnel(int port,String usernameOfOpener) throws IOException, TunnelPortOccupiedException {
         if(tunnelMap.containsKey(port))
-            throw new IllegalArgumentException(String.format("Tunnel port %d has already been occupied", port));
+            throw new TunnelPortOccupiedException(port);
 
-        TunnelServerThread tunnelThread=new TunnelServerThread(port,clientIdOfOpener);
+        TunnelServerThread tunnelThread=new TunnelServerThread(port,usernameOfOpener);
         tunnelThread.start();
         tunnelMap.put(port,tunnelThread);
     }
@@ -35,6 +33,10 @@ public class GlobalTunnelManager {
         TunnelServerThread tunnelThread=tunnelMap.get(port);
         tunnelThread.closeTunnel();
         tunnelMap.remove(port);
+    }
+
+    public boolean hasTunnel(int port){
+        return tunnelMap.containsKey(port);
     }
 
 }

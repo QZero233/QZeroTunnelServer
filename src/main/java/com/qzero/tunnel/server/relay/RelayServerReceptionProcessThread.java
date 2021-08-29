@@ -36,7 +36,12 @@ public class RelayServerReceptionProcessThread extends Thread {
         try {
             sessionId=br.readLine();
         } catch (IOException e) {
-            log.error("Failed to read config line from client "+clientIp,e);
+            log.trace("Failed to read config line from client "+clientIp+", connection closed",e);
+            try {
+                clientSocket.close();
+            }catch (Exception e1){
+
+            }
             return;
         }
 
@@ -52,8 +57,8 @@ public class RelayServerReceptionProcessThread extends Thread {
             }
         }
 
-        pw.println("Well done");
-        pw.flush();
+        //pw.println("Well done");
+        //pw.flush();
 
         session.setTunnelClient(clientSocket);
         session.startRelay();
