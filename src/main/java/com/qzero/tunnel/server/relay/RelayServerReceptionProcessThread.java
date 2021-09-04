@@ -1,5 +1,7 @@
 package com.qzero.tunnel.server.relay;
 
+import com.qzero.tunnel.server.tunnel.GlobalTunnelManager;
+import com.qzero.tunnel.server.tunnel.TunnelOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +34,9 @@ public class RelayServerReceptionProcessThread extends Thread {
     public void run() {
         super.run();
 
-        String sessionId;
+        String configLine;
         try {
-            sessionId=br.readLine();
+            configLine=br.readLine();
         } catch (IOException e) {
             log.trace("Failed to read config line from client "+clientIp+", connection closed",e);
             try {
@@ -45,22 +47,47 @@ public class RelayServerReceptionProcessThread extends Thread {
             return;
         }
 
-        RelaySessionContainer sessionContainer=RelaySessionContainer.getInstance();
-        RelaySession session=sessionContainer.getSession(sessionId);
-        if(session==null){
-            pw.println(String.format("Session with id %s does not exist", sessionId));
+        String[] parts=configLine.split(" ");
+
+        int tunnelPort;
+        String sessionId;
+        try {
+            tunnelPort=Integer.parseInt(parts[0]);
+            sessionId=parts[1];
+        }catch (Exception e){
+            pw.println("Failed to convert config value for config line, please connect again and use <tunnelPort> <sessionId>");
             pw.flush();
             try {
                 clientSocket.close();
-            }catch (Exception e){
+            }catch (Exception e1){
 
             }
+            return;
         }
 
-        //pw.println("Well done");
-        //pw.flush();
+        TunnelOperator operator= GlobalTunnelManager.getInstance().getTunnelOperator(tunnelPort);
+        if(operator==null){
+            pw.println("Tunnel with port "+tunnelPort+" does not exist");
+            pw.flush();
+            try {
+                clientSocket.close();
+            }catch (Exception e1){
 
-        session.setTunnelClient(clientSocket);
-        session.startRelay();
+            }
+            return;
+        }
+
+        try {
+            operator.startRelaySession(sessionId,clientSocket);
+        } catch (Exception e) {
+            pw.println("Failed to start relay session with client\nReason: "+e.getMessage());
+            pw.flush();
+            try {
+                clientSocket.close();
+            }catch (Exception e1){
+
+            }
+            return;
+        }
     }
 }
