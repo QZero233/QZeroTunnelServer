@@ -56,13 +56,17 @@ public class RelaySession {
                 tunnelClient.getInetAddress().getHostAddress()));
     }
 
-    public void stopRelay(){
+    public void closeSession(){
         try {
-            directToTunnel.interrupt();
-            tunnelToDirect.interrupt();
+            if(directToTunnel!=null)
+                directToTunnel.interrupt();
+            if(tunnelToDirect!=null)
+                tunnelToDirect.interrupt();
 
-            directClient.close();
-            tunnelClient.close();
+            if(directClient!=null)
+                directClient.close();
+            if(tunnelClient!=null)
+                tunnelClient.close();
         }catch (Exception e){
             log.trace("Failed to stop relay session",e);
         }

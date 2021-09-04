@@ -3,7 +3,6 @@ package com.qzero.tunnel.server.tunnel;
 import com.qzero.tunnel.server.GlobalCommandServerClientContainer;
 import com.qzero.tunnel.server.command.CommandServerClientProcessThread;
 import com.qzero.tunnel.server.relay.RelaySession;
-import com.qzero.tunnel.server.relay.RelaySessionContainer;
 import com.qzero.tunnel.server.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +21,14 @@ public class TunnelServerThread extends Thread {
 
     private ServerSocket serverSocket;
 
-    private GlobalCommandServerClientContainer clientContainer=GlobalCommandServerClientContainer.getInstance();
 
-    public TunnelServerThread(int tunnelPort,String usernameOfOpener) throws IOException {
+
+    private TunnelOperator.newClientConnectedCallback callback;
+
+    public TunnelServerThread(int tunnelPort,String usernameOfOpener,TunnelOperator.newClientConnectedCallback callback) throws IOException {
         this.tunnelPort = tunnelPort;
         this.usernameOfOpener =usernameOfOpener;
+        this.callback=callback;
         serverSocket=new ServerSocket(tunnelPort);
     }
 
@@ -36,12 +38,10 @@ public class TunnelServerThread extends Thread {
 
         log.trace(String.format("Tunnel has started on port %d successfully", tunnelPort));
 
-        RelaySessionContainer relaySessionContainer=RelaySessionContainer.getInstance();
-
         try {
             while (!isInterrupted()) {
                 Socket socket = serverSocket.accept();
-                String ip = socket.getInetAddress().getHostAddress();
+                /*String ip = socket.getInetAddress().getHostAddress();
 
                 if(!clientContainer.hasOnlineClient(usernameOfOpener)){
                     try {
@@ -50,15 +50,10 @@ public class TunnelServerThread extends Thread {
                     }catch (Exception e){
                     }
                     continue;
-                }
-
-                String sessionId= UUIDUtils.getRandomUUID();
-                RelaySession session=new RelaySession();
-                session.setDirectClient(socket);
-                relaySessionContainer.addSession(sessionId,session);
-
-                CommandServerClientProcessThread processThread=clientContainer.getClient(usernameOfOpener);
-                processThread.writeToClientWithLn("connect_relay_session "+sessionId);
+                }*/
+                callback.onConnected(socket);
+                /*CommandServerClientProcessThread processThread=clientContainer.getClient(usernameOfOpener);
+                processThread.writeToClientWithLn("connect_relay_session "+sessionId);*/
             }
         } catch (Exception e) {
             if(isInterrupted()){
