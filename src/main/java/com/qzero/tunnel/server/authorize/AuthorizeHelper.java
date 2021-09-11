@@ -1,36 +1,33 @@
 package com.qzero.tunnel.server.authorize;
 
-import com.qzero.tunnel.server.utils.StreamUtils;
+import com.qzero.tunnel.server.SpringUtil;
+import com.qzero.tunnel.server.data.TunnelUser;
+import com.qzero.tunnel.server.data.repositories.TunnelUserRepository;
 
-import java.io.File;
 import java.io.IOException;
 
 public class AuthorizeHelper {
 
-    public static final String AUTHORIZE_FILE_DIR="users/";
-    static {
-        new File(AUTHORIZE_FILE_DIR).mkdirs();
+    private static AuthorizeHelper instance;
+
+    private TunnelUserRepository userRepository;
+
+    public static AuthorizeHelper getInstance(){
+        if(instance==null)
+            instance=new AuthorizeHelper();
+        return instance;
     }
 
-    public static boolean checkAuthorize(TunnelUser user) throws IOException {
-        File file=new File(AUTHORIZE_FILE_DIR+user.getUsername()+".config");
-        if(!file.exists())
-            return false;
-
-        byte[] buf= StreamUtils.readFile(file);
-        String passwordHash=new String(buf);
-        return passwordHash.equals(user.getPasswordHash());
+    private AuthorizeHelper(){
+        userRepository=SpringUtil.getBean(TunnelUserRepository.class);
     }
 
-    public static TunnelUser getUser(String username) throws UserDoesNotExistException, IOException {
-        File file=new File(AUTHORIZE_FILE_DIR+username+".config");
-        if(!file.exists())
-            throw new UserDoesNotExistException(username);
+    public boolean checkAuthorize(TunnelUser user) throws IOException {
+        return userRepository.existsByUsernameAndPasswordHash(user.getUsername(),user.getPasswordHash());
+    }
 
-        byte[] buf= StreamUtils.readFile(file);
-        String passwordHash=new String(buf);
-
-        return new TunnelUser(username,passwordHash);
+    public TunnelUser getUser(String username) throws UserDoesNotExistException, IOException {
+        return userRepository.getByUsername(username);
     }
 
 }

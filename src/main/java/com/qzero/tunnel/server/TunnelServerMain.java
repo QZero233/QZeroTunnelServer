@@ -6,15 +6,38 @@ import com.qzero.tunnel.server.config.ServerConfiguration;
 import com.qzero.tunnel.server.relay.RelayServerReceptionThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.Banner;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-public class TunnelServerMain {
+@SpringBootApplication
+public class TunnelServerMain implements ApplicationRunner {
 
     private static Logger log= LoggerFactory.getLogger(TunnelServerMain.class);
 
     public static void main(String[] args) {
+        new SpringApplicationBuilder(TunnelServerMain.class)
+                .web(WebApplicationType.NONE)
+                .bannerMode(Banner.Mode.OFF)
+                .run(args);
+    }
+
+    private static void loadConfig() throws IOException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
+        GlobalConfigurationManager configurationManager=GlobalConfigurationManager.getInstance();
+
+        log.info("Loading server config");
+        configurationManager.loadServerConfig();
+        log.info("Loaded server config");
+    }
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
         log.info("Loading config");
         try {
             loadConfig();
@@ -43,13 +66,4 @@ public class TunnelServerMain {
 
         log.info("Tunnel server has started successfully");
     }
-
-    private static void loadConfig() throws IOException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
-        GlobalConfigurationManager configurationManager=GlobalConfigurationManager.getInstance();
-
-        log.info("Loading server config");
-        configurationManager.loadServerConfig();
-        log.info("Loaded server config");
-    }
-
 }

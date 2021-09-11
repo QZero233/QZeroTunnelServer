@@ -1,5 +1,6 @@
 package com.qzero.tunnel.server.relay;
 
+import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.tunnel.GlobalTunnelManager;
 import com.qzero.tunnel.server.tunnel.TunnelOperator;
 import org.slf4j.Logger;
@@ -65,7 +66,8 @@ public class RelayServerReceptionProcessThread extends Thread {
             return;
         }
 
-        TunnelOperator operator= GlobalTunnelManager.getInstance().getTunnelOperator(tunnelPort);
+        GlobalTunnelManager tunnelManager= GlobalTunnelManager.getInstance();
+        TunnelOperator operator= tunnelManager.getTunnelOperator(tunnelPort);
         if(operator==null){
             pw.println("Tunnel with port "+tunnelPort+" does not exist");
             pw.flush();
