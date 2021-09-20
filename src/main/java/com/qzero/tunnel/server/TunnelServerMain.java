@@ -1,20 +1,15 @@
 package com.qzero.tunnel.server;
 
-import com.qzero.tunnel.server.command.CommandServerReceptionThread;
-import com.qzero.tunnel.server.config.GlobalConfigurationManager;
-import com.qzero.tunnel.server.config.ServerConfiguration;
+import com.qzero.tunnel.server.config.ServerConfig;
 import com.qzero.tunnel.server.relay.RelayServerReceptionThread;
+import com.qzero.tunnel.server.remind.RemindServerReceptionThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.Banner;
-import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 @SpringBootApplication
 public class TunnelServerMain implements ApplicationRunner {
@@ -23,34 +18,19 @@ public class TunnelServerMain implements ApplicationRunner {
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(TunnelServerMain.class)
-                .web(WebApplicationType.NONE)
                 .bannerMode(Banner.Mode.OFF)
                 .run(args);
     }
 
-    private static void loadConfig() throws IOException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
-        GlobalConfigurationManager configurationManager=GlobalConfigurationManager.getInstance();
-
-        log.info("Loading server config");
-        configurationManager.loadServerConfig();
-        log.info("Loaded server config");
-    }
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args){
         log.info("Loading config");
-        try {
-            loadConfig();
-        }catch (Exception e){
-            log.error("Failed to load config, program is shutting down",e);
-            return;
-        }
+        ServerConfig serverConfig=SpringUtil.getBean(ServerConfig.class);
 
-        GlobalConfigurationManager configurationManager=GlobalConfigurationManager.getInstance();
-        ServerConfiguration serverConfiguration=configurationManager.getServerConfiguration();
-        log.info("Starting command server");
+        log.info("Starting remind server");
         try {
-            new CommandServerReceptionThread(serverConfiguration.getCommandServerPort()).start();
+            new RemindServerReceptionThread(serverConfig.getRemindServerPort()).start();
         }catch (Exception e){
             log.error("Failed to start command server, program is shutting down",e);
             System.exit(0);
@@ -58,7 +38,7 @@ public class TunnelServerMain implements ApplicationRunner {
 
         log.info("Starting relay reception server");
         try {
-            new RelayServerReceptionThread(serverConfiguration.getReceptionServerPort()).start();
+            new RelayServerReceptionThread(serverConfig.getReceptionServerPort()).start();
         }catch (Exception e){
             log.error("Failed to start relay reception server, program is shutting down",e);
             System.exit(0);

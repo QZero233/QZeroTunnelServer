@@ -1,11 +1,12 @@
 package com.qzero.tunnel.server.tunnel;
 
-import com.qzero.tunnel.server.SpringUtil;
-import com.qzero.tunnel.server.config.GlobalConfigurationManager;
-import com.qzero.tunnel.server.config.ServerConfiguration;
+import com.qzero.tunnel.server.config.ServerConfig;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.data.repositories.TunnelConfigRepository;
-import org.springframework.stereotype.Component;
+import com.qzero.tunnel.server.exception.TunnelDoesNotExistException;
+import com.qzero.tunnel.server.exception.TunnelPortOccupiedException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,31 +14,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GlobalTunnelManager {
+@Service
+public class TunnelService {
 
     private Map<Integer, TunnelOperator> tunnelMap =new HashMap<>();
 
-    private static GlobalTunnelManager instance;
+    private List<Integer> bannedPorts=new ArrayList<>();
 
-    private List<String> bannedPorts;
+    private final TunnelConfigRepository configRepository;
 
-    private TunnelConfigRepository configRepository;
-
-    public static GlobalTunnelManager getInstance(){
-        if(instance==null)
-            instance=new GlobalTunnelManager();
-        return instance;
-    }
-
-    private GlobalTunnelManager(){
-        ServerConfiguration configuration=GlobalConfigurationManager.getInstance().getServerConfiguration();
-        bannedPorts=configuration.getBannedTunnelPorts();
-        if(bannedPorts==null)
-            bannedPorts=new ArrayList<>();
-        bannedPorts.add(configuration.getReceptionServerPort()+"");
-        bannedPorts.add(configuration.getCommandServerPort()+"");
-
-        configRepository= SpringUtil.getBean(TunnelConfigRepository.class);
+    @Autowired
+    public TunnelService(ServerConfig config, TunnelConfigRepository configRepository){
+        if(config.getBannedPorts()!=null)
+            bannedPorts=config.getBannedPorts();
+        this.configRepository = configRepository;
+        bannedPorts.add(config.getRemindServerPort());
+        bannedPorts.add(config.getReceptionServerPort());
     }
 
     public void updateTunnel(TunnelConfig config) throws TunnelDoesNotExistException {
@@ -56,7 +48,7 @@ public class GlobalTunnelManager {
 
     public void newTunnel(TunnelConfig config) throws TunnelPortOccupiedException {
         int port=config.getTunnelPort();
-        if(configRepository.existsByTunnelPort(port) || bannedPorts.contains(port+""))
+        if(configRepository.existsByTunnelPort(port) || bannedPorts.contains(port))
             throw new TunnelPortOccupiedException(port);
 
         configRepository.save(config);
@@ -86,6 +78,10 @@ public class GlobalTunnelManager {
             return;
 
         tunnelMap.get(port).closeTunnel();
+    }
+
+    public TunnelConfig getTunnelConfig(int tunnelPort){
+        return configRepository.getByTunnelPort(tunnelPort);
     }
 
     public TunnelOperator getTunnelOperator(int port){

@@ -1,7 +1,7 @@
 package com.qzero.tunnel.server.tunnel;
 
-import com.qzero.tunnel.server.GlobalCommandServerClientContainer;
-import com.qzero.tunnel.server.command.CommandServerClientProcessThread;
+import com.qzero.tunnel.server.remind.RemindClientContainer;
+import com.qzero.tunnel.server.remind.RemindClientProcessThread;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.relay.RelaySession;
 import com.qzero.tunnel.server.utils.UUIDUtils;
@@ -21,7 +21,7 @@ public class TunnelOperator {
 
     private Map<String,RelaySession> sessionMap=new HashMap<>();
 
-    private GlobalCommandServerClientContainer clientContainer=GlobalCommandServerClientContainer.getInstance();
+    private RemindClientContainer clientContainer= RemindClientContainer.getInstance();
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
@@ -48,9 +48,8 @@ public class TunnelOperator {
 
         sessionMap.put(sessionId,session);
 
-        CommandServerClientProcessThread processThread=clientContainer.getClient(config.getTunnelOwner());
-        processThread.writeToClientWithLn(String.format("connect_relay_session %d %s %s %d", config.getTunnelPort(),sessionId,
-                config.getLocalIp(),config.getLocalPort()));
+        RemindClientProcessThread processThread=clientContainer.getClient(config.getTunnelOwner());
+        processThread.remindRelayConnect(config,sessionId);
     };
 
     public TunnelOperator(TunnelConfig config) {

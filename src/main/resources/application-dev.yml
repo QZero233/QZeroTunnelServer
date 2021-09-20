@@ -8,3 +8,5 @@ spring:
     hibernate:
       ddl-auto: update
 debug: false
+server:
+  port: 8080
