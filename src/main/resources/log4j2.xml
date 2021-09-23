@@ -31,9 +31,9 @@
             </AppenderRef>
         </Root>
 
-        <logger name="empty" level="FATAL">
+        <logger name="com.zaxxer" level="FATAL" />
 
-        </logger>
+        <logger name="org.hibernate" level="FATAL" />
 
     </Loggers>
 </Configuration>

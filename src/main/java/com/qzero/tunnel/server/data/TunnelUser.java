@@ -1,8 +1,14 @@
-package com.qzero.tunnel.server.authorize;
+package com.qzero.tunnel.server.data;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Entity
 public class TunnelUser {
 
+    @Id
     private String username;
+
     private String passwordHash;
 
     public TunnelUser() {

@@ -1,4 +1,4 @@
-package com.qzero.tunnel.server.command;
+package com.qzero.tunnel.server.remind;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class CommandServerReceptionThread extends Thread{
+public class RemindServerReceptionThread extends Thread{
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
@@ -15,7 +15,7 @@ public class CommandServerReceptionThread extends Thread{
 
     private int port;
 
-    public CommandServerReceptionThread(int port) throws IOException {
+    public RemindServerReceptionThread(int port) throws IOException {
         this.port=port;
         serverSocket=new ServerSocket(port);
     }
@@ -31,7 +31,7 @@ public class CommandServerReceptionThread extends Thread{
                 Socket socket=serverSocket.accept();
                 String ip=socket.getInetAddress().getHostAddress();
                 try {
-                    new CommandServerClientProcessThread(socket).start();
+                    new RemindClientProcessThread(socket).start();
                     log.trace(String.format("Client with ip %s has connected successfully", ip));
                 }catch (Exception e){
                     log.trace("Failed to initialize operator for client with ip "+ip,e);

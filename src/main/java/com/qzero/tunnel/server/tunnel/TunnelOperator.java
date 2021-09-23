@@ -1,7 +1,8 @@
 package com.qzero.tunnel.server.tunnel;
 
-import com.qzero.tunnel.server.GlobalCommandServerClientContainer;
-import com.qzero.tunnel.server.command.CommandServerClientProcessThread;
+import com.qzero.tunnel.server.remind.RemindClientContainer;
+import com.qzero.tunnel.server.remind.RemindClientProcessThread;
+import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.relay.RelaySession;
 import com.qzero.tunnel.server.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -12,15 +13,15 @@ import java.net.Socket;
 import java.util.*;
 
 public class TunnelOperator {
+    private boolean running=false;
 
-    private int port;
-    private String usernameOfOpener;
+    private TunnelConfig config;
 
     private TunnelServerThread tunnelServerThread;
 
     private Map<String,RelaySession> sessionMap=new HashMap<>();
 
-    private GlobalCommandServerClientContainer clientContainer=GlobalCommandServerClientContainer.getInstance();
+    private RemindClientContainer clientContainer= RemindClientContainer.getInstance();
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
@@ -31,7 +32,7 @@ public class TunnelOperator {
     private newClientConnectedCallback callback=socket -> {
         String ip = socket.getInetAddress().getHostAddress();
 
-        if(!clientContainer.hasOnlineClient(usernameOfOpener)){
+        if(!clientContainer.hasOnlineClient(config.getTunnelOwner())){
             try {
                 socket.close();
                 log.trace(String.format("Close connection with client %s, for opener is not online", ip));
@@ -47,18 +48,19 @@ public class TunnelOperator {
 
         sessionMap.put(sessionId,session);
 
-        CommandServerClientProcessThread processThread=clientContainer.getClient(usernameOfOpener);
-        processThread.writeToClientWithLn(String.format("connect_relay_session %d %s", port,sessionId));
+        RemindClientProcessThread processThread=clientContainer.getClient(config.getTunnelOwner());
+        processThread.remindRelayConnect(config,sessionId);
     };
 
-    public TunnelOperator(int port, String usernameOfOpener) {
-        this.port = port;
-        this.usernameOfOpener = usernameOfOpener;
+    public TunnelOperator(TunnelConfig config) {
+        this.config=config;
     }
 
     public void openTunnel() throws IOException {
-        tunnelServerThread=new TunnelServerThread(port, usernameOfOpener, callback);
+        tunnelServerThread=new TunnelServerThread(config.getTunnelPort(), callback);
+        tunnelServerThread.initializeServer();
         tunnelServerThread.start();
+        running=true;
     }
 
     public void closeTunnel() throws IOException {
@@ -68,6 +70,11 @@ public class TunnelOperator {
         for(String key:keySet){
             sessionMap.get(key).closeSession();
         }
+        running=false;
+    }
+
+    public boolean isTunnelRunning(){
+        return running;
     }
 
     public void startRelaySession(String sessionId,Socket tunnelSocket) throws Exception{
@@ -78,5 +85,10 @@ public class TunnelOperator {
         session.setTunnelClient(tunnelSocket);
         session.startRelay();
     }
+
+    public void updateTunnelConfig(TunnelConfig config){
+        this.config=config;
+    }
+
 
 }
