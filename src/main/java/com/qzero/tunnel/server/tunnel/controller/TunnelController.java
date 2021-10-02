@@ -48,6 +48,20 @@ public class TunnelController {
         return new ActionResult(true,null);
     }
 
+    @DeleteMapping ("/{tunnel_port}")
+    public ActionResult deleteTunnel(@PathVariable("tunnel_port") int tunnelPort,
+                                     @RequestHeader("username") String username) throws ResponsiveException {
+        TunnelConfig tunnelConfig=tunnelService.getTunnelConfig(tunnelPort);
+        if(tunnelConfig==null)
+            throw new TunnelDoesNotExistException(tunnelPort);
+
+        if(!tunnelConfig.getTunnelOwner().equals(username))
+            throw new ResponsiveException(ErrorCodeList.CODE_PERMISSION_DENIED,"You don't own the tunnel");
+
+        tunnelService.deleteTunnel(tunnelPort);
+        return new ActionResult(true,null);
+    }
+
     @RequestMapping("/{tunnel_port}/open")
     public ActionResult openTunnel(@PathVariable("tunnel_port") int tunnelPort,
                                    @RequestHeader("username") String username) throws ResponsiveException, IOException {

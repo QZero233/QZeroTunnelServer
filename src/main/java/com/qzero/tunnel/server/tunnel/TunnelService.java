@@ -3,8 +3,11 @@ package com.qzero.tunnel.server.tunnel;
 import com.qzero.tunnel.server.config.ServerConfig;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.data.repositories.TunnelConfigRepository;
+import com.qzero.tunnel.server.exception.ErrorCodeList;
+import com.qzero.tunnel.server.exception.ResponsiveException;
 import com.qzero.tunnel.server.exception.TunnelDoesNotExistException;
 import com.qzero.tunnel.server.exception.TunnelPortOccupiedException;
+import com.qzero.tunnel.server.remind.RemindClientContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -54,13 +57,17 @@ public class TunnelService {
         configRepository.save(config);
     }
 
-    public void openTunnel(int port) throws IOException, TunnelDoesNotExistException {
-        if(!configRepository.existsByTunnelPort(port))
+    public void openTunnel(int port) throws IOException, ResponsiveException {
+        TunnelConfig config=configRepository.getByTunnelPort(port);
+        if(config==null)
             throw new TunnelDoesNotExistException(port);
+
+        String owner=config.getTunnelOwner();
+        if(!RemindClientContainer.getInstance().hasOnlineClient(owner))
+            throw new ResponsiveException(ErrorCodeList.CODE_BAD_REQUEST_PARAMETER,"The owner is not online, can not open tunnel");
 
         TunnelOperator operator;
         if(!tunnelMap.containsKey(port)){
-            TunnelConfig config=configRepository.getByTunnelPort(port);
             operator=new TunnelOperator(config);
             tunnelMap.put(port,operator);
         }else{
@@ -104,6 +111,18 @@ public class TunnelService {
             TunnelOperator operator=tunnelMap.get(config.getTunnelPort());
             operator.closeTunnel();
         }
+    }
+
+    public void deleteTunnel(int port) throws ResponsiveException {
+        if(tunnelMap.containsKey(port)){
+            TunnelOperator operator=tunnelMap.get(port);
+            if(operator.isTunnelRunning()){
+                throw new ResponsiveException(ErrorCodeList.CODE_BAD_REQUEST_PARAMETER,"Can not delete when tunnel is running");
+            }
+        }
+
+        configRepository.deleteById(port);
+        tunnelMap.remove(port);
     }
 
 }

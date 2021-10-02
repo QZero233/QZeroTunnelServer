@@ -12,7 +12,11 @@
     </Appenders>
 
     <Loggers>
-        <Root level="TRACE" additivity="false">
+        <Root level="ERROR" additivity="false">
+            <AppenderRef ref="ConsoleError" />
+        </Root>
+
+        <logger name="com.qzero" level="TRACE" additivity="false">
             <AppenderRef ref="ConsoleInfo">
                 <!-- Without error and fatal -->
                 <Filters>
@@ -29,11 +33,7 @@
                     <ThresholdFilter level="FATAL" onMatch="ACCEPT" onMismatch="DENY"/>
                 </Filters>
             </AppenderRef>
-        </Root>
-
-        <logger name="com.zaxxer" level="FATAL" />
-
-        <logger name="org.hibernate" level="FATAL" />
+        </logger>
 
     </Loggers>
 </Configuration>

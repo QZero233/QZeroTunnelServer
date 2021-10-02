@@ -18,7 +18,7 @@ public class ExceptionController{
     @ExceptionHandler
     public ActionResult handleException(HttpServletRequest request,
                                         Throwable e){
-        log.error(e.getMessage(),e);
+        log.trace(e.getMessage(),e);
         ActionResult actionResult=processException(e);
 
         return actionResult;
