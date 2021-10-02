@@ -25,7 +25,7 @@ public class TokenCheckInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if(request.getServletPath().equals("/auth/login")){
+        if(request.getServletPath().equals("/auth/login") || request.getServletPath().startsWith("/server")){
             return true;
         }
 
