@@ -10,7 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class RemindClientProcessThread extends Thread {
 
@@ -53,7 +55,10 @@ public class RemindClientProcessThread extends Thread {
                 log.trace(String.format("The process thread for client %s has been stopped", clientIp));
                 return;
             }
-            log.error("Failed to continue to interact with client "+clientIp,e);
+
+            if(!(e instanceof SocketException)){
+                log.error("Failed to continue to interact with client "+clientIp+" due to unknown reason",e);
+            }
         }
 
         try {

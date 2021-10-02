@@ -10,8 +10,10 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
+@EnableTransactionManagement
 public class TunnelServerMain implements ApplicationRunner {
 
     private static Logger log= LoggerFactory.getLogger(TunnelServerMain.class);
