@@ -16,6 +16,8 @@
             <AppenderRef ref="ConsoleError" />
         </Root>
 
+        <logger level="FATAL" name="org.apache.catalina.core.ContainerBase" />
+
         <logger name="com.qzero" level="TRACE" additivity="false">
             <AppenderRef ref="ConsoleInfo">
                 <!-- Without error and fatal -->
