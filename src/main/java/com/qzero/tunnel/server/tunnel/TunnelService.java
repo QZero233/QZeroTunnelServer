@@ -1,6 +1,6 @@
 package com.qzero.tunnel.server.tunnel;
 
-import com.qzero.tunnel.server.config.ServerConfig;
+import com.qzero.tunnel.server.config.PortConfig;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.data.repositories.TunnelConfigRepository;
 import com.qzero.tunnel.server.exception.ErrorCodeList;
@@ -29,7 +29,7 @@ public class TunnelService {
     private final TunnelConfigRepository configRepository;
 
     @Autowired
-    public TunnelService(ServerConfig config, TunnelConfigRepository configRepository){
+    public TunnelService(PortConfig config, TunnelConfigRepository configRepository){
         if(config.getBannedPorts()!=null)
             bannedPorts=config.getBannedPorts();
         this.configRepository = configRepository;

@@ -24,4 +24,12 @@ public class AuthController {
         return new ActionResult(true,tokenId);
     }
 
+    @PostMapping("/register")
+    public ActionResult register(@RequestParam("username") String username,
+                                 @RequestParam("password_hash") String passwordHash) throws ResponsiveException {
+        authorizeHelper.addUser(new TunnelUser(username,passwordHash));
+
+        return new ActionResult(true,null);
+    }
+
 }

@@ -10,7 +10,7 @@ import java.util.List;
 @Configuration
 @PropertySource("classpath:server.properties")
 @ConfigurationProperties(prefix = "server")
-public class ServerConfig {
+public class PortConfig {
 
     private int remindServerPort=9999;
 
@@ -18,10 +18,10 @@ public class ServerConfig {
 
     private List<Integer> bannedPorts=new ArrayList<>();
 
-    public ServerConfig() {
+    public PortConfig() {
     }
 
-    public ServerConfig(int remindServerPort, int receptionServerPort, List<Integer> bannedPorts) {
+    public PortConfig(int remindServerPort, int receptionServerPort, List<Integer> bannedPorts) {
         this.remindServerPort = remindServerPort;
         this.receptionServerPort = receptionServerPort;
         this.bannedPorts = bannedPorts;

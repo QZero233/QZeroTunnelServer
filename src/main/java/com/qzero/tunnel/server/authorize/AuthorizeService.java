@@ -40,16 +40,27 @@ public class AuthorizeService {
     public TunnelUser getUserByToken(String tokenId) throws ResponsiveException {
         UserToken token=tokenRepository.getById(tokenId);
         if(token==null){
-            throw new ResponsiveException(ErrorCodeList.CODE_ILLEGAL_TOKEN, String.format("Token with id %s does not exist", tokenId));
+            throw new ResponsiveException(ErrorCodeList.CODE_ILLEGAL_TOKEN,
+                    String.format("Token with id %s does not exist", tokenId));
         }
 
         String username=token.getUsername();
         TunnelUser user=userRepository.getByUsername(username);
         if(user==null){
-            throw new ResponsiveException(ErrorCodeList.CODE_MISSING_RESOURCE, String.format("User with username %s does not exist", username));
+            throw new ResponsiveException(ErrorCodeList.CODE_MISSING_RESOURCE,
+                    String.format("User with username %s does not exist", username));
         }
 
         return user;
+    }
+
+    public void addUser(TunnelUser user) throws ResponsiveException {
+        if(userRepository.existsById(user.getUsername())){
+            throw new ResponsiveException(ErrorCodeList.CODE_BAD_REQUEST_PARAMETER,
+                    String.format("User named %s already exists", user.getUsername()));
+        }
+
+        userRepository.save(user);
     }
 
 }

@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class ServerConfigController {
+public class PortConfigController {
 
     @Autowired
-    private ServerConfig serverConfig;
+    private PortConfig serverConfig;
 
     @RequestMapping("/server/port_info")
     public ServerPortInfo getServerPortInfo(){

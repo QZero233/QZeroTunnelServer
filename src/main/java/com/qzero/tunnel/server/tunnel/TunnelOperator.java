@@ -42,9 +42,14 @@ public class TunnelOperator {
             return;
         }
 
+
         String sessionId= UUIDUtils.getRandomUUID();
         RelaySession session=new RelaySession();
         session.setDirectClient(socket);
+
+        session.setCloseCallback(() -> {
+            sessionMap.remove(sessionId);
+        });
 
         sessionMap.put(sessionId,session);
 

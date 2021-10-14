@@ -1,6 +1,6 @@
 package com.qzero.tunnel.server;
 
-import com.qzero.tunnel.server.config.ServerConfig;
+import com.qzero.tunnel.server.config.PortConfig;
 import com.qzero.tunnel.server.relay.RelayServerReceptionThread;
 import com.qzero.tunnel.server.remind.RemindServerReceptionThread;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ public class TunnelServerMain implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args){
         log.info("Loading config");
-        ServerConfig serverConfig=SpringUtil.getBean(ServerConfig.class);
+        PortConfig serverConfig=SpringUtil.getBean(PortConfig.class);
 
         log.info("Starting remind server");
         try {

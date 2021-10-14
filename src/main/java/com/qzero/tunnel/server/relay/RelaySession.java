@@ -15,6 +15,12 @@ public class RelaySession {
     private RelayThread directToTunnel;
     private RelayThread tunnelToDirect;
 
+    private RelaySessionCloseCallback closeCallback;
+
+    public void setCloseCallback(RelaySessionCloseCallback closeCallback) {
+        this.closeCallback = closeCallback;
+    }
+
     public void setDirectClient(Socket directClient) {
         this.directClient = directClient;
     }
@@ -44,6 +50,8 @@ public class RelaySession {
             }catch (Exception e){
                 log.trace("Failed to close tunnel client connection",e);
             }
+
+            closeCallback.callback();
         };
 
         directToTunnel=new RelayThread(directClient,tunnelClient,synchronizedDisconnectListener);
@@ -71,6 +79,8 @@ public class RelaySession {
             log.trace("Failed to stop relay session",e);
         }
         log.trace("Relay session has stopped");
+
+        closeCallback.callback();
     }
 
 }
