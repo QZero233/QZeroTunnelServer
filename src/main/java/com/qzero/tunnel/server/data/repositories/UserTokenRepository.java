@@ -9,4 +9,6 @@ public interface UserTokenRepository extends JpaRepository<UserToken,String> {
 
     UserToken findByTokenIdAndUsername(String tokenId,String username);
 
+    boolean existsByTokenIdAndUsername(String tokenId,String username);
+
 }

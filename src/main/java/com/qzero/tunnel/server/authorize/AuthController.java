@@ -2,12 +2,10 @@ package com.qzero.tunnel.server.authorize;
 
 import com.qzero.tunnel.server.data.ActionResult;
 import com.qzero.tunnel.server.data.TunnelUser;
+import com.qzero.tunnel.server.data.UserToken;
 import com.qzero.tunnel.server.exception.ResponsiveException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,6 +28,12 @@ public class AuthController {
         authorizeHelper.addUser(new TunnelUser(username,passwordHash));
 
         return new ActionResult(true,null);
+    }
+
+    @GetMapping("/{token}/validity")
+    public ActionResult checkTokenValidity(@PathVariable("token") String token,
+                                           @RequestParam("username") String username){
+        return new ActionResult(authorizeHelper.checkTokenValidity(new UserToken(token,username)),null);
     }
 
 }

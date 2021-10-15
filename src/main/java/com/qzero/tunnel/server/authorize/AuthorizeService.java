@@ -63,4 +63,8 @@ public class AuthorizeService {
         userRepository.save(user);
     }
 
+    public boolean checkTokenValidity(UserToken token){
+        return tokenRepository.existsByTokenIdAndUsername(token.getTokenId(),token.getUsername());
+    }
+
 }

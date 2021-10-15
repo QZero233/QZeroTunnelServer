@@ -6,10 +6,13 @@ import com.qzero.tunnel.server.exception.ErrorCodeList;
 import com.qzero.tunnel.server.exception.ResponsiveException;
 import com.qzero.tunnel.server.exception.TunnelDoesNotExistException;
 import com.qzero.tunnel.server.tunnel.TunnelService;
+import com.qzero.tunnel.server.utils.JsonUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/tunnel")
@@ -92,6 +95,26 @@ public class TunnelController {
         tunnelService.closeTunnel(tunnelPort);
 
         return new ActionResult(true,null);
+    }
+
+    @GetMapping("/{tunnel_port}")
+    public ActionResult getTunnelConfig(@PathVariable("tunnel_port") int tunnelPort,
+                                   @RequestHeader("username") String username) throws ResponsiveException{
+        TunnelConfig tunnelConfig=tunnelService.getTunnelConfig(tunnelPort);
+        if(tunnelConfig==null)
+            throw new TunnelDoesNotExistException(tunnelPort);
+
+        if(!tunnelConfig.getTunnelOwner().equals(username))
+            throw new ResponsiveException(ErrorCodeList.CODE_PERMISSION_DENIED,"You don't own the tunnel");
+
+        tunnelConfig= (TunnelConfig) Hibernate.unproxy(tunnelConfig);
+        return new ActionResult(true, JsonUtils.toJson(tunnelConfig));
+    }
+
+    @GetMapping("/")
+    public ActionResult getAllTunnelConfig(@RequestHeader("username") String username) {
+        List<TunnelConfig> configList=tunnelService.getAllTunnelConfigByOwner(username);
+        return new ActionResult(true,JsonUtils.toJson(configList));
     }
 
 }

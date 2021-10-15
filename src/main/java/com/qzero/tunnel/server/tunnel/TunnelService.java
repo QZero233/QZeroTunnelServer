@@ -127,4 +127,9 @@ public class TunnelService {
         tunnelMap.remove(port);
     }
 
+    public List<TunnelConfig> getAllTunnelConfigByOwner(String owner){
+        List<TunnelConfig> configList=configRepository.findAllByTunnelOwner(owner);
+        return configList;
+    }
+
 }
