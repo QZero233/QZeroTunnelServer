@@ -14,12 +14,21 @@ public class RelayThread extends Thread {
 
     private ClientDisconnectedListener listener;
 
+    private DataPreprocessor preprocessor;
+
     private Logger log= LoggerFactory.getLogger(getClass());
 
     public RelayThread(Socket source, Socket destination, ClientDisconnectedListener listener) {
         this.source = source;
         this.destination = destination;
         this.listener=listener;
+    }
+
+    public RelayThread(Socket source, Socket destination, ClientDisconnectedListener listener, DataPreprocessor preprocessor) {
+        this.source = source;
+        this.destination = destination;
+        this.listener = listener;
+        this.preprocessor = preprocessor;
     }
 
     @Override
@@ -37,6 +46,12 @@ public class RelayThread extends Thread {
                 if(len==-1){
                     break;
                 }
+
+                if(preprocessor!=null){
+                    buf=preprocessor.afterReceived(buf);
+                    buf=preprocessor.beforeSent(buf);
+                }
+
                 dstOs.write(buf,0,len);
             }
         }catch (Exception e){

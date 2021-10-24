@@ -101,8 +101,8 @@ public class RemindClientProcessThread extends Thread {
     }
 
     public void remindRelayConnect(TunnelConfig config, String sessionId) {
-        pw.println(String.format("%d %s %s %d", config.getTunnelPort(), sessionId,
-                config.getLocalIp(), config.getLocalPort()));
+        pw.println(String.format("%d %s %s %d %s", config.getTunnelPort(), sessionId,
+                config.getLocalIp(), config.getLocalPort(),config.getCryptoModuleName()));
         pw.flush();
     }
 

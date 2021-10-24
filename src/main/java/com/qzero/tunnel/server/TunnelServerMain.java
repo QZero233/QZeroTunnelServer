@@ -1,6 +1,7 @@
 package com.qzero.tunnel.server;
 
 import com.qzero.tunnel.server.config.PortConfig;
+import com.qzero.tunnel.server.crypto.CryptoModuleContainer;
 import com.qzero.tunnel.server.relay.RelayServerReceptionThread;
 import com.qzero.tunnel.server.remind.RemindServerReceptionThread;
 import org.slf4j.Logger;
@@ -29,6 +30,14 @@ public class TunnelServerMain implements ApplicationRunner {
     public void run(ApplicationArguments args){
         log.info("Loading config");
         PortConfig serverConfig=SpringUtil.getBean(PortConfig.class);
+
+        log.info("Loading crypto modules");
+        try {
+            CryptoModuleContainer.getInstance().loadDefaultModules();
+        } catch (Exception e) {
+            log.error("Failed to load crypto module, program is shutting down",e);
+            System.exit(0);
+        }
 
         log.info("Starting remind server");
         try {

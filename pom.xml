@@ -74,6 +74,7 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -88,7 +89,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.qzero.tunnel.client.ClientMain</mainClass>
+                            <mainClass>com.qzero.tunnel.server.TunnelServerMain</mainClass>
                         </manifest>
                     </archive>
 

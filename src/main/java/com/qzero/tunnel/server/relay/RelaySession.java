@@ -1,5 +1,7 @@
 package com.qzero.tunnel.server.relay;
 
+import com.qzero.tunnel.server.crypto.CryptoContext;
+import com.qzero.tunnel.server.crypto.CryptoModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,9 @@ public class RelaySession {
 
     private RelaySessionCloseCallback closeCallback;
 
+    private CryptoContext context;
+    private CryptoModule cryptoModule;
+
     public void setCloseCallback(RelaySessionCloseCallback closeCallback) {
         this.closeCallback = closeCallback;
     }
@@ -27,6 +32,11 @@ public class RelaySession {
 
     public void setTunnelClient(Socket tunnelClient) {
         this.tunnelClient = tunnelClient;
+    }
+
+    public void initializeCryptoModule(CryptoModule cryptoModule){
+        this.cryptoModule=cryptoModule;
+        context=cryptoModule.getInitialContext();
     }
 
     public void startRelay(){
@@ -54,8 +64,33 @@ public class RelaySession {
             closeCallback.callback();
         };
 
-        directToTunnel=new RelayThread(directClient,tunnelClient,synchronizedDisconnectListener);
-        tunnelToDirect=new RelayThread(tunnelClient,directClient,synchronizedDisconnectListener);
+        //Direct to relay server : unencrypted
+        //Relay server to tunnel : encrypt before sent
+        directToTunnel=new RelayThread(directClient, tunnelClient, synchronizedDisconnectListener, new DataPreprocessor() {
+            @Override
+            public byte[] beforeSent(byte[] data) {
+                return cryptoModule.encrypt(data,context);
+            }
+
+            @Override
+            public byte[] afterReceived(byte[] data) {
+                return data;
+            }
+        });
+
+        //Tunnel to relay server: encrypted
+        //Relay server to direct: unencrypted
+        tunnelToDirect=new RelayThread(tunnelClient, directClient, synchronizedDisconnectListener, new DataPreprocessor() {
+            @Override
+            public byte[] beforeSent(byte[] data) {
+                return data;
+            }
+
+            @Override
+            public byte[] afterReceived(byte[] data) {
+                return cryptoModule.decrypt(data,context);
+            }
+        });
 
         directToTunnel.start();
         tunnelToDirect.start();

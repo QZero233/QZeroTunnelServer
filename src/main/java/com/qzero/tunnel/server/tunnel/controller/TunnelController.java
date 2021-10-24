@@ -25,6 +25,7 @@ public class TunnelController {
     public ActionResult updateTunnel(@PathVariable("tunnel_port") int tunnelPort,
                                      @RequestParam("local_ip") String localIp,
                                      @RequestParam("local_port") int localPort,
+                                     @RequestParam("crypto_module_name") String cryptoModuleName,
                                      @RequestHeader("username") String username) throws ResponsiveException {
 
         TunnelConfig tunnelConfig=tunnelService.getTunnelConfig(tunnelPort);
@@ -36,6 +37,7 @@ public class TunnelController {
 
         tunnelConfig.setLocalIp(localIp);
         tunnelConfig.setLocalPort(localPort);
+        tunnelConfig.setCryptoModuleName(cryptoModuleName);
         tunnelService.updateTunnel(tunnelConfig);
 
         return new ActionResult(true,null);
@@ -45,9 +47,10 @@ public class TunnelController {
     public ActionResult newTunnel(@PathVariable("tunnel_port") int tunnelPort,
                                   @RequestParam("local_ip") String localIp,
                                   @RequestParam("local_port") int localPort,
+                                  @RequestParam("crypto_module_name") String cryptoModuleName,
                                   @RequestHeader("username") String username) throws ResponsiveException{
 
-        tunnelService.newTunnel(new TunnelConfig(tunnelPort,username,localIp,localPort));
+        tunnelService.newTunnel(new TunnelConfig(tunnelPort,username,localIp,localPort,cryptoModuleName));
         return new ActionResult(true,null);
     }
 

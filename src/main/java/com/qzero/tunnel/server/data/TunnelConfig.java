@@ -14,14 +14,17 @@ public class TunnelConfig {
     private String localIp;
     private int localPort;
 
+    private String cryptoModuleName;
+
     public TunnelConfig() {
     }
 
-    public TunnelConfig(int tunnelPort, String tunnelOwner, String localIp, int localPort) {
+    public TunnelConfig(int tunnelPort, String tunnelOwner, String localIp, int localPort, String cryptoModuleName) {
         this.tunnelPort = tunnelPort;
         this.tunnelOwner = tunnelOwner;
         this.localIp = localIp;
         this.localPort = localPort;
+        this.cryptoModuleName = cryptoModuleName;
     }
 
     public int getTunnelPort() {
@@ -56,6 +59,14 @@ public class TunnelConfig {
         this.localPort = localPort;
     }
 
+    public String getCryptoModuleName() {
+        return cryptoModuleName;
+    }
+
+    public void setCryptoModuleName(String cryptoModuleName) {
+        this.cryptoModuleName = cryptoModuleName;
+    }
+
     @Override
     public String toString() {
         return "TunnelConfig{" +
@@ -63,6 +74,7 @@ public class TunnelConfig {
                 ", tunnelOwner='" + tunnelOwner + '\'' +
                 ", localIp='" + localIp + '\'' +
                 ", localPort=" + localPort +
+                ", cryptoModuleName='" + cryptoModuleName + '\'' +
                 '}';
     }
 }

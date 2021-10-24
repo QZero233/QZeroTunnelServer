@@ -1,16 +1,20 @@
 package com.qzero.tunnel.server.tunnel;
 
-import com.qzero.tunnel.server.remind.RemindClientContainer;
-import com.qzero.tunnel.server.remind.RemindClientProcessThread;
+import com.qzero.tunnel.server.crypto.CryptoModule;
+import com.qzero.tunnel.server.crypto.CryptoModuleContainer;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.relay.RelaySession;
+import com.qzero.tunnel.server.remind.RemindClientContainer;
+import com.qzero.tunnel.server.remind.RemindClientProcessThread;
 import com.qzero.tunnel.server.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class TunnelOperator {
     private boolean running=false;
@@ -22,6 +26,8 @@ public class TunnelOperator {
     private Map<String,RelaySession> sessionMap=new HashMap<>();
 
     private RemindClientContainer clientContainer= RemindClientContainer.getInstance();
+
+    private CryptoModule cryptoModule;
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
@@ -62,6 +68,13 @@ public class TunnelOperator {
     }
 
     public void openTunnel() throws IOException {
+        if(!CryptoModuleContainer.getInstance().hasModule(config.getCryptoModuleName())){
+            throw new IOException(String.format("Crypto module named %s does not exist", config.getCryptoModuleName()));
+        }
+
+        if(cryptoModule==null)
+            cryptoModule=CryptoModuleContainer.getInstance().getModule(config.getCryptoModuleName());
+
         tunnelServerThread=new TunnelServerThread(config.getTunnelPort(), callback);
         tunnelServerThread.initializeServer();
         tunnelServerThread.start();
@@ -82,8 +95,9 @@ public class TunnelOperator {
         return running;
     }
 
-    public void startRelaySession(String sessionId,Socket tunnelSocket) throws Exception{
+    public void startRelaySession(String sessionId, Socket tunnelSocket) {
         RelaySession session=sessionMap.get(sessionId);
+        session.initializeCryptoModule(cryptoModule);
         if(session==null)
             throw new IllegalArgumentException(String.format("Relay session with id %s does not exist", sessionId));
 
@@ -95,5 +109,7 @@ public class TunnelOperator {
         this.config=config;
     }
 
-
+    public CryptoModule getCryptoModule() {
+        return cryptoModule;
+    }
 }
