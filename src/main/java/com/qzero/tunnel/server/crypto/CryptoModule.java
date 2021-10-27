@@ -1,10 +1,20 @@
 package com.qzero.tunnel.server.crypto;
 
-public interface CryptoModule<T extends CryptoContext> {
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-    byte[] encrypt(byte[] data,T context);
+public interface CryptoModule {
 
-    byte[] decrypt(byte[] data,T context);
+    byte[] encrypt(byte[] data);
 
-    CryptoContext getInitialContext();
+    byte[] decrypt(byte[] data);
+
+    default void doHandshakeAsServer(InputStream inputStream, OutputStream outputStream) throws IOException{
+
+    }
+
+    default void doHandshakeAsClient(InputStream inputStream, OutputStream outputStream) throws IOException{
+
+    }
 }

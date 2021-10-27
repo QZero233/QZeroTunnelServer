@@ -1,7 +1,8 @@
 package com.qzero.tunnel.server.tunnel;
 
 import com.qzero.tunnel.server.crypto.CryptoModule;
-import com.qzero.tunnel.server.crypto.CryptoModuleContainer;
+import com.qzero.tunnel.server.crypto.CryptoModuleFactory;
+import com.qzero.tunnel.server.crypto.modules.PlainModule;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.relay.RelaySession;
 import com.qzero.tunnel.server.remind.RemindClientContainer;
@@ -27,9 +28,9 @@ public class TunnelOperator {
 
     private RemindClientContainer clientContainer= RemindClientContainer.getInstance();
 
-    private CryptoModule cryptoModule;
-
     private Logger log= LoggerFactory.getLogger(getClass());
+
+    private CryptoModule tunnelToServerModule;
 
     public interface newClientConnectedCallback{
         void onConnected(Socket socket);
@@ -68,12 +69,10 @@ public class TunnelOperator {
     }
 
     public void openTunnel() throws IOException {
-        if(!CryptoModuleContainer.getInstance().hasModule(config.getCryptoModuleName())){
+        tunnelToServerModule= CryptoModuleFactory.getModule(config.getCryptoModuleName());
+        if(tunnelToServerModule==null){
             throw new IOException(String.format("Crypto module named %s does not exist", config.getCryptoModuleName()));
         }
-
-        if(cryptoModule==null)
-            cryptoModule=CryptoModuleContainer.getInstance().getModule(config.getCryptoModuleName());
 
         tunnelServerThread=new TunnelServerThread(config.getTunnelPort(), callback);
         tunnelServerThread.initializeServer();
@@ -97,19 +96,25 @@ public class TunnelOperator {
 
     public void startRelaySession(String sessionId, Socket tunnelSocket) {
         RelaySession session=sessionMap.get(sessionId);
-        session.initializeCryptoModule(cryptoModule);
+
         if(session==null)
             throw new IllegalArgumentException(String.format("Relay session with id %s does not exist", sessionId));
 
         session.setTunnelClient(tunnelSocket);
+
+        try {
+            tunnelToServerModule.doHandshakeAsServer(tunnelSocket.getInputStream(),tunnelSocket.getOutputStream());
+        }catch (Exception e){
+            log.error(String.format("Failed to handshake with client %s, can not start relay session",
+                    tunnelSocket.getInetAddress().getHostAddress()),e);
+            session.closeSession();
+        }
+
+        session.initializeCryptoModule(tunnelToServerModule,new PlainModule());
         session.startRelay();
     }
 
     public void updateTunnelConfig(TunnelConfig config){
         this.config=config;
-    }
-
-    public CryptoModule getCryptoModule() {
-        return cryptoModule;
     }
 }

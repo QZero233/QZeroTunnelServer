@@ -1,26 +1,30 @@
 package com.qzero.tunnel.server.crypto.modules;
 
-import com.qzero.tunnel.server.crypto.CryptoContext;
 import com.qzero.tunnel.server.crypto.CryptoModule;
-import com.qzero.tunnel.server.crypto.CryptoModuleClass;
 
-@CryptoModuleClass(name = "plain")
-public class PlainModule implements CryptoModule<CryptoContext> {
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+public class PlainModule implements CryptoModule {
 
     @Override
-    public byte[] encrypt(byte[] data, CryptoContext context) {
+    public byte[] encrypt(byte[] data) {
         return data;
     }
 
     @Override
-    public byte[] decrypt(byte[] data, CryptoContext context) {
+    public byte[] decrypt(byte[] data) {
         return data;
     }
 
     @Override
-    public CryptoContext getInitialContext() {
-        return new CryptoContext();
+    public void doHandshakeAsClient(InputStream inputStream, OutputStream outputStream) throws IOException {
+        CryptoModule.super.doHandshakeAsClient(inputStream, outputStream);
     }
 
-
+    @Override
+    public void doHandshakeAsServer(InputStream inputStream, OutputStream outputStream) throws IOException {
+        CryptoModule.super.doHandshakeAsServer(inputStream, outputStream);
+    }
 }

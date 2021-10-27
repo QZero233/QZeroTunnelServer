@@ -1,6 +1,5 @@
 package com.qzero.tunnel.server.relay;
 
-import com.qzero.tunnel.server.crypto.CryptoContext;
 import com.qzero.tunnel.server.crypto.CryptoModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +18,8 @@ public class RelaySession {
 
     private RelaySessionCloseCallback closeCallback;
 
-    private CryptoContext context;
-    private CryptoModule cryptoModule;
+    private CryptoModule tunnelToServerModule;
+    private CryptoModule directToServerModule;
 
     public void setCloseCallback(RelaySessionCloseCallback closeCallback) {
         this.closeCallback = closeCallback;
@@ -34,9 +33,9 @@ public class RelaySession {
         this.tunnelClient = tunnelClient;
     }
 
-    public void initializeCryptoModule(CryptoModule cryptoModule){
-        this.cryptoModule=cryptoModule;
-        context=cryptoModule.getInitialContext();
+    public void initializeCryptoModule(CryptoModule tunnelToServerModule,CryptoModule directToServerModule){
+        this.tunnelToServerModule=tunnelToServerModule;
+        this.directToServerModule=directToServerModule;
     }
 
     public void startRelay(){
@@ -64,31 +63,44 @@ public class RelaySession {
             closeCallback.callback();
         };
 
-        //Direct to relay server : unencrypted
-        //Relay server to tunnel : encrypt before sent
         directToTunnel=new RelayThread(directClient, tunnelClient, synchronizedDisconnectListener, new DataPreprocessor() {
             @Override
             public byte[] beforeSent(byte[] data) {
-                return cryptoModule.encrypt(data,context);
+                if(tunnelToServerModule!=null){
+                    return tunnelToServerModule.encrypt(data);
+                }else{
+                    return data;
+                }
             }
 
             @Override
             public byte[] afterReceived(byte[] data) {
-                return data;
+                if(directToServerModule!=null){
+                    return directToServerModule.decrypt(data);
+                }else{
+                    return data;
+                }
             }
         });
 
-        //Tunnel to relay server: encrypted
-        //Relay server to direct: unencrypted
+
         tunnelToDirect=new RelayThread(tunnelClient, directClient, synchronizedDisconnectListener, new DataPreprocessor() {
             @Override
             public byte[] beforeSent(byte[] data) {
-                return data;
+                if(directToServerModule!=null){
+                    return directToServerModule.encrypt(data);
+                }else{
+                    return data;
+                }
             }
 
             @Override
             public byte[] afterReceived(byte[] data) {
-                return cryptoModule.decrypt(data,context);
+                if(tunnelToServerModule!=null){
+                    return tunnelToServerModule.decrypt(data);
+                }else{
+                    return data;
+                }
             }
         });
 
