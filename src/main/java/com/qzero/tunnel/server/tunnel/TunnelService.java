@@ -7,12 +7,13 @@ import com.qzero.tunnel.server.exception.ErrorCodeList;
 import com.qzero.tunnel.server.exception.ResponsiveException;
 import com.qzero.tunnel.server.exception.TunnelDoesNotExistException;
 import com.qzero.tunnel.server.exception.TunnelPortOccupiedException;
-import com.qzero.tunnel.server.remind.RemindClientContainer;
+import com.qzero.tunnel.server.traverse.remind.RemindClientContainer;
+import com.qzero.tunnel.server.tunnel.operator.NATTraverseTunnelOperator;
+import com.qzero.tunnel.server.tunnel.operator.TunnelOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,8 +48,6 @@ public class TunnelService {
 
         configRepository.save(config);
 
-        if(tunnelMap.containsKey(config.getTunnelPort()))
-            tunnelMap.get(config.getTunnelPort()).updateTunnelConfig(config);
     }
 
     public void newTunnel(TunnelConfig config) throws TunnelPortOccupiedException {
@@ -59,7 +58,7 @@ public class TunnelService {
         configRepository.save(config);
     }
 
-    public void openTunnel(int port) throws IOException, ResponsiveException {
+    public void openTunnel(int port) throws Exception {
         TunnelConfig config=configRepository.getByTunnelPort(port);
         if(config==null)
             throw new TunnelDoesNotExistException(port);
@@ -70,7 +69,7 @@ public class TunnelService {
 
         TunnelOperator operator;
         if(!tunnelMap.containsKey(port)){
-            operator=new TunnelOperator(config);
+            operator=new NATTraverseTunnelOperator(config);
             tunnelMap.put(port,operator);
         }else{
             operator=tunnelMap.get(port);
@@ -82,7 +81,7 @@ public class TunnelService {
         operator.openTunnel();;
     }
 
-    public void closeTunnel(int port) throws IOException, TunnelDoesNotExistException {
+    public void closeTunnel(int port) throws Exception {
         if(!tunnelMap.containsKey(port))
             return;
 
@@ -101,7 +100,7 @@ public class TunnelService {
         return configRepository.existsByTunnelPort(port);
     }
 
-    public void closeAllTunnelByOwner(String owner) throws IOException {
+    public void closeAllTunnelByOwner(String owner) throws Exception {
         List<TunnelConfig> configList=configRepository.findAllByTunnelOwner(owner);
         if(configList==null)
             return;

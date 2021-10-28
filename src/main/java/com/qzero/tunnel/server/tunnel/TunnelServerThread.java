@@ -1,5 +1,6 @@
 package com.qzero.tunnel.server.tunnel;
 
+import com.qzero.tunnel.server.data.TunnelConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,38 +12,41 @@ public class TunnelServerThread extends Thread {
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
-    private int tunnelPort;
+    private TunnelConfig tunnelConfig;
 
     private ServerSocket serverSocket;
 
-    private TunnelOperator.newClientConnectedCallback callback;
+    private NewClientConnectedCallback clientConnectedCallback;
 
-    public TunnelServerThread(int tunnelPort,TunnelOperator.newClientConnectedCallback callback) throws IOException {
-        this.tunnelPort = tunnelPort;
-        this.callback=callback;
+    public TunnelServerThread(TunnelConfig tunnelConfig,NewClientConnectedCallback clientConnectedCallback) throws Exception {
+        this.tunnelConfig=tunnelConfig;
+        this.clientConnectedCallback=clientConnectedCallback;
+
+        if(tunnelConfig==null)
+            throw new Exception("Tunnel config can not be null");
     }
 
-    public void initializeServer() throws IOException {
-        serverSocket=new ServerSocket(tunnelPort);
+    public void startServerSocket() throws IOException {
+        serverSocket=new ServerSocket(tunnelConfig.getTunnelPort());
     }
 
     @Override
     public void run() {
         super.run();
-        log.trace(String.format("Tunnel has started on port %d successfully", tunnelPort));
+        log.trace(String.format("Tunnel has started on port %d successfully", tunnelConfig.getTunnelPort()));
 
         try {
             while (!isInterrupted()) {
                 Socket socket = serverSocket.accept();
-                callback.onConnected(socket);
+                clientConnectedCallback.onConnected(socket);
             }
         } catch (Exception e) {
             if(isInterrupted()){
-                log.trace(String.format("Tunnel on port %d has been closed", tunnelPort));
+                log.trace(String.format("Tunnel on port %d has been closed", tunnelConfig.getTunnelPort()));
                 return;
             }
             log.trace(String.format("Failed to accept tunnel client on port %d, no more client will be accepted from now on",
-                    tunnelPort), e);
+                    tunnelConfig.getTunnelPort()), e);
         }
     }
 

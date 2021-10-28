@@ -1,7 +1,8 @@
-package com.qzero.tunnel.server.remind;
+package com.qzero.tunnel.server.traverse.remind;
 
 import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.authorize.AuthorizeService;
+import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.data.TunnelUser;
 import com.qzero.tunnel.server.exception.ResponsiveException;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -63,7 +63,7 @@ public class RemindClientProcessThread extends Thread {
 
         try {
             clientSocket.close();
-            log.trace("Command server lost connection with client "+clientIp);
+            log.trace("NAT traverse connect remind server lost connection with client "+clientIp);
         }catch (Exception e){
             log.trace("Failed to close connection with client "+clientIp,e);
         }
@@ -73,7 +73,7 @@ public class RemindClientProcessThread extends Thread {
             try {
                 TunnelService tunnelManager=SpringUtil.getBean(TunnelService.class);
                 tunnelManager.closeAllTunnelByOwner(username);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error("Failed to close all tunnels opened by "+username);
             }
             RemindClientContainer.getInstance().removeClient(username);
@@ -100,9 +100,9 @@ public class RemindClientProcessThread extends Thread {
         RemindClientContainer.getInstance().addClient(username,this);
     }
 
-    public void remindRelayConnect(TunnelConfig config, String sessionId) {
+    public void remindRelayConnect(TunnelConfig config,NATTraverseMapping mapping, String sessionId) {
         pw.println(String.format("%d %s %s %d %s", config.getTunnelPort(), sessionId,
-                config.getLocalIp(), config.getLocalPort(),config.getCryptoModuleName()));
+                mapping.getLocalIp(), mapping.getLocalPort(),config.getCryptoModuleName()));
         pw.flush();
     }
 

@@ -1,4 +1,4 @@
-package com.qzero.tunnel.server.remind;
+package com.qzero.tunnel.server.traverse.remind;
 
 import java.util.HashMap;
 import java.util.Map;

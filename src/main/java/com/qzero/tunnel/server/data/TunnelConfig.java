@@ -11,20 +11,21 @@ public class TunnelConfig {
 
     private String tunnelOwner;
 
-    private String localIp;
-    private int localPort;
-
     private String cryptoModuleName;
+
+    private int tunnelType;
+
+    public static final int TYPE_NAT_TRAVERSE=1;
+    public static final int TYPE_PROXY=2;
 
     public TunnelConfig() {
     }
 
-    public TunnelConfig(int tunnelPort, String tunnelOwner, String localIp, int localPort, String cryptoModuleName) {
+    public TunnelConfig(int tunnelPort, String tunnelOwner, String cryptoModuleName, int tunnelType) {
         this.tunnelPort = tunnelPort;
         this.tunnelOwner = tunnelOwner;
-        this.localIp = localIp;
-        this.localPort = localPort;
         this.cryptoModuleName = cryptoModuleName;
+        this.tunnelType = tunnelType;
     }
 
     public int getTunnelPort() {
@@ -43,22 +44,6 @@ public class TunnelConfig {
         this.tunnelOwner = tunnelOwner;
     }
 
-    public String getLocalIp() {
-        return localIp;
-    }
-
-    public void setLocalIp(String localIp) {
-        this.localIp = localIp;
-    }
-
-    public int getLocalPort() {
-        return localPort;
-    }
-
-    public void setLocalPort(int localPort) {
-        this.localPort = localPort;
-    }
-
     public String getCryptoModuleName() {
         return cryptoModuleName;
     }
@@ -67,14 +52,21 @@ public class TunnelConfig {
         this.cryptoModuleName = cryptoModuleName;
     }
 
+    public int getTunnelType() {
+        return tunnelType;
+    }
+
+    public void setTunnelType(int tunnelType) {
+        this.tunnelType = tunnelType;
+    }
+
     @Override
     public String toString() {
         return "TunnelConfig{" +
                 "tunnelPort=" + tunnelPort +
                 ", tunnelOwner='" + tunnelOwner + '\'' +
-                ", localIp='" + localIp + '\'' +
-                ", localPort=" + localPort +
                 ", cryptoModuleName='" + cryptoModuleName + '\'' +
+                ", tunnelType=" + tunnelType +
                 '}';
     }
 }

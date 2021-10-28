@@ -1,26 +1,33 @@
-package com.qzero.tunnel.server.tunnel;
+package com.qzero.tunnel.server.tunnel.operator;
 
+import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.crypto.CryptoModule;
 import com.qzero.tunnel.server.crypto.CryptoModuleFactory;
 import com.qzero.tunnel.server.crypto.modules.PlainModule;
+import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
+import com.qzero.tunnel.server.data.repositories.NATTraverseMappingRepository;
 import com.qzero.tunnel.server.relay.RelaySession;
-import com.qzero.tunnel.server.remind.RemindClientContainer;
-import com.qzero.tunnel.server.remind.RemindClientProcessThread;
+import com.qzero.tunnel.server.traverse.remind.RemindClientContainer;
+import com.qzero.tunnel.server.traverse.remind.RemindClientProcessThread;
+import com.qzero.tunnel.server.tunnel.NewClientConnectedCallback;
+import com.qzero.tunnel.server.tunnel.TunnelServerThread;
 import com.qzero.tunnel.server.utils.UUIDUtils;
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class TunnelOperator {
+public class NATTraverseTunnelOperator implements TunnelOperator {
     private boolean running=false;
 
     private TunnelConfig config;
+
+    private NATTraverseMapping mapping;
 
     private TunnelServerThread tunnelServerThread;
 
@@ -32,11 +39,7 @@ public class TunnelOperator {
 
     private CryptoModule tunnelToServerModule;
 
-    public interface newClientConnectedCallback{
-        void onConnected(Socket socket);
-    }
-
-    private newClientConnectedCallback callback=socket -> {
+    private NewClientConnectedCallback callback= socket -> {
         String ip = socket.getInetAddress().getHostAddress();
 
         if(!clientContainer.hasOnlineClient(config.getTunnelOwner())){
@@ -61,26 +64,34 @@ public class TunnelOperator {
         sessionMap.put(sessionId,session);
 
         RemindClientProcessThread processThread=clientContainer.getClient(config.getTunnelOwner());
-        processThread.remindRelayConnect(config,sessionId);
+        processThread.remindRelayConnect(config,mapping,sessionId);
     };
 
-    public TunnelOperator(TunnelConfig config) {
+    public NATTraverseTunnelOperator(TunnelConfig config) {
         this.config=config;
     }
 
-    public void openTunnel() throws IOException {
+    public void openTunnel() throws Exception {
         tunnelToServerModule= CryptoModuleFactory.getModule(config.getCryptoModuleName());
         if(tunnelToServerModule==null){
-            throw new IOException(String.format("Crypto module named %s does not exist", config.getCryptoModuleName()));
+            throw new Exception(String.format("Crypto module named %s does not exist", config.getCryptoModuleName()));
         }
 
-        tunnelServerThread=new TunnelServerThread(config.getTunnelPort(), callback);
-        tunnelServerThread.initializeServer();
+        NATTraverseMappingRepository mappingRepository= SpringUtil.getBean(NATTraverseMappingRepository.class);
+        mapping=mappingRepository.getById(config.getTunnelPort());
+        if(mapping==null){
+            throw new Exception("can not find NAT traverse mapping rule");
+        }
+
+        mapping= (NATTraverseMapping) Hibernate.unproxy(mapping);
+
+        tunnelServerThread=new TunnelServerThread(config, callback);
+        tunnelServerThread.startServerSocket();
         tunnelServerThread.start();
         running=true;
     }
 
-    public void closeTunnel() throws IOException {
+    public void closeTunnel() throws Exception {
         tunnelServerThread.closeTunnel();
 
         Set<String> keySet=sessionMap.keySet();
@@ -112,9 +123,5 @@ public class TunnelOperator {
 
         session.initializeCryptoModule(tunnelToServerModule,new PlainModule());
         session.startRelay();
-    }
-
-    public void updateTunnelConfig(TunnelConfig config){
-        this.config=config;
     }
 }

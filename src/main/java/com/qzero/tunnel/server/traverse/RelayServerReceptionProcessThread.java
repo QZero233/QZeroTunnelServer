@@ -1,8 +1,9 @@
-package com.qzero.tunnel.server.relay;
+package com.qzero.tunnel.server.traverse;
 
 import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.tunnel.TunnelService;
-import com.qzero.tunnel.server.tunnel.TunnelOperator;
+import com.qzero.tunnel.server.tunnel.operator.NATTraverseTunnelOperator;
+import com.qzero.tunnel.server.tunnel.operator.TunnelOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,9 +65,11 @@ public class RelayServerReceptionProcessThread extends Thread {
         }
 
         TunnelService tunnelManager= SpringUtil.getBean(TunnelService.class);
-        TunnelOperator operator= tunnelManager.getTunnelOperator(tunnelPort);
-        if(operator==null){
-            pw.println("Tunnel with port "+tunnelPort+" does not exist");
+
+        TunnelOperator tunnelOperator=tunnelManager.getTunnelOperator(tunnelPort);
+
+        if(tunnelOperator==null || !(tunnelOperator instanceof NATTraverseTunnelOperator)){
+            pw.println("NAT traverse tunnel with port "+tunnelPort+" does not exist");
             pw.flush();
             try {
                 clientSocket.close();
@@ -76,6 +79,7 @@ public class RelayServerReceptionProcessThread extends Thread {
             return;
         }
 
+        NATTraverseTunnelOperator operator= (NATTraverseTunnelOperator) tunnelOperator;
 
         try {
             operator.startRelaySession(sessionId,clientSocket);

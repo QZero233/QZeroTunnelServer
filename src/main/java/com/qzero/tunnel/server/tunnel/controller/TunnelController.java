@@ -21,7 +21,7 @@ public class TunnelController {
     @Autowired
     private TunnelService tunnelService;
 
-    @PutMapping("/{tunnel_port}")
+    /*@PutMapping("/{tunnel_port}")
     public ActionResult updateTunnel(@PathVariable("tunnel_port") int tunnelPort,
                                      @RequestParam("local_ip") String localIp,
                                      @RequestParam("local_port") int localPort,
@@ -41,16 +41,17 @@ public class TunnelController {
         tunnelService.updateTunnel(tunnelConfig);
 
         return new ActionResult(true,null);
-    }
+    }*/
+    //TODO make it partial update
+    //TODO add nat traverse mapping update
 
     @PostMapping("/{tunnel_port}")
     public ActionResult newTunnel(@PathVariable("tunnel_port") int tunnelPort,
-                                  @RequestParam("local_ip") String localIp,
-                                  @RequestParam("local_port") int localPort,
                                   @RequestParam("crypto_module_name") String cryptoModuleName,
+                                  @RequestParam("tunnel_type") int tunnelType,
                                   @RequestHeader("username") String username) throws ResponsiveException{
 
-        tunnelService.newTunnel(new TunnelConfig(tunnelPort,username,localIp,localPort,cryptoModuleName));
+        tunnelService.newTunnel(new TunnelConfig(tunnelPort,username,cryptoModuleName,tunnelType));
         return new ActionResult(true,null);
     }
 
@@ -70,7 +71,7 @@ public class TunnelController {
 
     @RequestMapping("/{tunnel_port}/open")
     public ActionResult openTunnel(@PathVariable("tunnel_port") int tunnelPort,
-                                   @RequestHeader("username") String username) throws ResponsiveException, IOException {
+                                   @RequestHeader("username") String username) throws Exception {
 
         TunnelConfig tunnelConfig=tunnelService.getTunnelConfig(tunnelPort);
         if(tunnelConfig==null)
@@ -86,7 +87,7 @@ public class TunnelController {
 
     @RequestMapping("/{tunnel_port}/close")
     public ActionResult closeTunnel(@PathVariable("tunnel_port") int tunnelPort,
-                                   @RequestHeader("username") String username) throws ResponsiveException, IOException {
+                                   @RequestHeader("username") String username) throws Exception {
 
         TunnelConfig tunnelConfig=tunnelService.getTunnelConfig(tunnelPort);
         if(tunnelConfig==null)
