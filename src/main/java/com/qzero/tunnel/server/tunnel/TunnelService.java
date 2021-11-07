@@ -1,7 +1,9 @@
 package com.qzero.tunnel.server.tunnel;
 
 import com.qzero.tunnel.server.config.PortConfig;
+import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
+import com.qzero.tunnel.server.data.repositories.NATTraverseMappingRepository;
 import com.qzero.tunnel.server.data.repositories.TunnelConfigRepository;
 import com.qzero.tunnel.server.exception.ErrorCodeList;
 import com.qzero.tunnel.server.exception.ResponsiveException;
@@ -10,6 +12,7 @@ import com.qzero.tunnel.server.exception.TunnelPortOccupiedException;
 import com.qzero.tunnel.server.traverse.remind.RemindClientContainer;
 import com.qzero.tunnel.server.tunnel.operator.NATTraverseTunnelOperator;
 import com.qzero.tunnel.server.tunnel.operator.TunnelOperator;
+import com.qzero.tunnel.server.tunnel.operator.TunnelOperatorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +31,8 @@ public class TunnelService {
     private List<Integer> bannedPorts=new ArrayList<>();
 
     private final TunnelConfigRepository configRepository;
+
+
 
     @Autowired
     public TunnelService(PortConfig config, TunnelConfigRepository configRepository){
@@ -69,7 +74,7 @@ public class TunnelService {
 
         TunnelOperator operator;
         if(!tunnelMap.containsKey(port)){
-            operator=new NATTraverseTunnelOperator(config);
+            operator= TunnelOperatorFactory.getOperator(config);
             tunnelMap.put(port,operator);
         }else{
             operator=tunnelMap.get(port);
@@ -129,6 +134,21 @@ public class TunnelService {
     public List<TunnelConfig> getAllTunnelConfigByOwner(String owner){
         List<TunnelConfig> configList=configRepository.findAllByTunnelOwner(owner);
         return configList;
+    }
+
+    public boolean isTunnelRunning(int port){
+        if(!tunnelMap.containsKey(port))
+            return false;
+        return tunnelMap.get(port).isTunnelRunning();
+    }
+
+    public void checkTunnelExistenceAndPermission(int tunnelPort,String username) throws ResponsiveException {
+        TunnelConfig tunnelConfig=getTunnelConfig(tunnelPort);
+        if(tunnelConfig==null)
+            throw new TunnelDoesNotExistException(tunnelPort);
+
+        if(!tunnelConfig.getTunnelOwner().equals(username))
+            throw new ResponsiveException(ErrorCodeList.CODE_PERMISSION_DENIED,"You don't own the tunnel");
     }
 
 }

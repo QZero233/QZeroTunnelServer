@@ -16,4 +16,14 @@ public class CryptoModuleFactory {
         }
     }
 
+    public static boolean hasModule(String name){
+        switch (name){
+            case "plain":
+            case "test":
+                return true;
+            default:
+                return false;
+        }
+    }
+
 }

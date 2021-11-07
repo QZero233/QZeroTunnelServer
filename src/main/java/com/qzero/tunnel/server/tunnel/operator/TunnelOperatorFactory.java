@@ -10,6 +10,8 @@ public class TunnelOperatorFactory {
         switch (config.getTunnelType()){
             case TunnelConfig.TYPE_NAT_TRAVERSE:
                 return new NATTraverseTunnelOperator(config);
+            case TunnelConfig.TYPE_PROXY:
+                return new ProxyOperator(config);
             default:
                 return null;
         }

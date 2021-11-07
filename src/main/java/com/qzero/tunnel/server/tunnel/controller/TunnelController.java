@@ -1,6 +1,7 @@
 package com.qzero.tunnel.server.tunnel.controller;
 
 import com.qzero.tunnel.server.data.ActionResult;
+import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.exception.ErrorCodeList;
 import com.qzero.tunnel.server.exception.ResponsiveException;
@@ -21,29 +22,29 @@ public class TunnelController {
     @Autowired
     private TunnelService tunnelService;
 
-    /*@PutMapping("/{tunnel_port}")
-    public ActionResult updateTunnel(@PathVariable("tunnel_port") int tunnelPort,
-                                     @RequestParam("local_ip") String localIp,
-                                     @RequestParam("local_port") int localPort,
-                                     @RequestParam("crypto_module_name") String cryptoModuleName,
-                                     @RequestHeader("username") String username) throws ResponsiveException {
+    @PutMapping("/{tunnel_port}/crypto_module_name")
+    public ActionResult updateCryptoModule(@PathVariable("tunnel_port") int tunnelPort,
+                                           @RequestParam("crypto_module_name") String cryptoModuleName,
+                                           @RequestHeader("username") String username) throws ResponsiveException {
+        if(tunnelService.isTunnelRunning(tunnelPort)){
+            throw new ResponsiveException(ErrorCodeList.CODE_BAD_REQUEST_PARAMETER,"Can not update cryptoModule when tunnel is running");
+        }
+
+        return updateCryptoModuleHot(tunnelPort,cryptoModuleName,username);
+    }
+
+    @PutMapping("/{tunnel_port}/crypto_module_name/hot")
+    public ActionResult updateCryptoModuleHot(@PathVariable("tunnel_port") int tunnelPort,
+                                           @RequestParam("crypto_module_name") String cryptoModuleName,
+                                           @RequestHeader("username") String username) throws ResponsiveException {
+        tunnelService.checkTunnelExistenceAndPermission(tunnelPort,username);
 
         TunnelConfig tunnelConfig=tunnelService.getTunnelConfig(tunnelPort);
-        if(tunnelConfig==null)
-            throw new TunnelDoesNotExistException(tunnelPort);
-
-        if(!tunnelConfig.getTunnelOwner().equals(username))
-            throw new ResponsiveException(ErrorCodeList.CODE_PERMISSION_DENIED,"You don't own the tunnel");
-
-        tunnelConfig.setLocalIp(localIp);
-        tunnelConfig.setLocalPort(localPort);
         tunnelConfig.setCryptoModuleName(cryptoModuleName);
         tunnelService.updateTunnel(tunnelConfig);
 
         return new ActionResult(true,null);
-    }*/
-    //TODO make it partial update
-    //TODO add nat traverse mapping update
+    }
 
     @PostMapping("/{tunnel_port}")
     public ActionResult newTunnel(@PathVariable("tunnel_port") int tunnelPort,

@@ -37,8 +37,6 @@ public class NATTraverseTunnelOperator implements TunnelOperator {
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
-    private CryptoModule tunnelToServerModule;
-
     private NewClientConnectedCallback callback= socket -> {
         String ip = socket.getInetAddress().getHostAddress();
 
@@ -51,7 +49,6 @@ public class NATTraverseTunnelOperator implements TunnelOperator {
             }
             return;
         }
-
 
         String sessionId= UUIDUtils.getRandomUUID();
         RelaySession session=new RelaySession();
@@ -72,8 +69,7 @@ public class NATTraverseTunnelOperator implements TunnelOperator {
     }
 
     public void openTunnel() throws Exception {
-        tunnelToServerModule= CryptoModuleFactory.getModule(config.getCryptoModuleName());
-        if(tunnelToServerModule==null){
+        if(!CryptoModuleFactory.hasModule(config.getCryptoModuleName())){
             throw new Exception(String.format("Crypto module named %s does not exist", config.getCryptoModuleName()));
         }
 
@@ -113,6 +109,7 @@ public class NATTraverseTunnelOperator implements TunnelOperator {
 
         session.setTunnelClient(tunnelSocket);
 
+        CryptoModule tunnelToServerModule=CryptoModuleFactory.getModule(config.getCryptoModuleName());
         try {
             tunnelToServerModule.doHandshakeAsServer(tunnelSocket.getInputStream(),tunnelSocket.getOutputStream());
         }catch (Exception e){
