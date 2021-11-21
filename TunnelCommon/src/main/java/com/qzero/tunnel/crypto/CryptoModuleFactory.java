@@ -1,14 +1,14 @@
-package com.qzero.tunnel.server.crypto;
+package com.qzero.tunnel.crypto;
 
-import com.qzero.tunnel.server.crypto.modules.PlainModule;
-import com.qzero.tunnel.server.crypto.modules.TestModule;
+import com.qzero.tunnel.crypto.modules.TestModule;
+import com.qzero.tunnel.crypto.modules.PlainModule;
 
 public class CryptoModuleFactory {
 
     public static CryptoModule getModule(String name){
         switch (name){
             case "plain":
-                return new PlainModule();
+                return new PlainModule(0);
             case "test":
                 return new TestModule();
             default:

@@ -38,14 +38,28 @@ public class TunnelServerThread extends Thread {
         try {
             while (!isInterrupted()) {
                 Socket socket = serverSocket.accept();
-                clientConnectedCallback.onConnected(socket);
+
+                //Do connect event in another thread
+                //Or it will block other client's connection
+                //Recorded on 11/20/2021:
+                //我艹，找了半天问题终于找到了，如果不在另外一个线程运行，连接远端服务器的操作就会Block掉接收新客户端
+                //连接的过程，如果远端服务器一直连不上就会一直卡着
+                new Thread(){
+                    @Override
+                    public void run() {
+                        super.run();
+
+                        clientConnectedCallback.onConnected(socket);
+                    }
+                }.start();
+
             }
         } catch (Exception e) {
             if(isInterrupted()){
                 log.trace(String.format("Tunnel on port %d has been closed", tunnelConfig.getTunnelPort()));
                 return;
             }
-            log.trace(String.format("Failed to accept tunnel client on port %d, no more client will be accepted from now on",
+            log.error(String.format("Failed to accept tunnel client on port %d, no more client will be accepted from now on",
                     tunnelConfig.getTunnelPort()), e);
         }
     }

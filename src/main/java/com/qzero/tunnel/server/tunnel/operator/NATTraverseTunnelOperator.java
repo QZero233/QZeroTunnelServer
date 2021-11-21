@@ -1,18 +1,18 @@
 package com.qzero.tunnel.server.tunnel.operator;
 
+import com.qzero.tunnel.crypto.CryptoModule;
+import com.qzero.tunnel.crypto.CryptoModuleFactory;
+import com.qzero.tunnel.crypto.modules.PlainModule;
 import com.qzero.tunnel.server.SpringUtil;
-import com.qzero.tunnel.server.crypto.CryptoModule;
-import com.qzero.tunnel.server.crypto.CryptoModuleFactory;
-import com.qzero.tunnel.server.crypto.modules.PlainModule;
 import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.data.repositories.NATTraverseMappingRepository;
-import com.qzero.tunnel.server.relay.RelaySession;
+import com.qzero.tunnel.relay.RelaySession;
 import com.qzero.tunnel.server.traverse.remind.RemindClientContainer;
 import com.qzero.tunnel.server.traverse.remind.RemindClientProcessThread;
 import com.qzero.tunnel.server.tunnel.NewClientConnectedCallback;
 import com.qzero.tunnel.server.tunnel.TunnelServerThread;
-import com.qzero.tunnel.server.utils.UUIDUtils;
+import com.qzero.tunnel.utils.UUIDUtils;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +118,7 @@ public class NATTraverseTunnelOperator implements TunnelOperator {
             session.closeSession();
         }
 
-        session.initializeCryptoModule(tunnelToServerModule,new PlainModule());
+        session.initializeCryptoModule(tunnelToServerModule,null);
         session.startRelay();
     }
 }

@@ -6,7 +6,7 @@ import com.qzero.tunnel.server.data.repositories.TunnelUserRepository;
 import com.qzero.tunnel.server.data.repositories.UserTokenRepository;
 import com.qzero.tunnel.server.exception.ErrorCodeList;
 import com.qzero.tunnel.server.exception.ResponsiveException;
-import com.qzero.tunnel.server.utils.UUIDUtils;
+import com.qzero.tunnel.utils.UUIDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.qzero.tunnel.server.crypto;
+package com.qzero.tunnel.crypto;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,9 +6,16 @@ import java.io.OutputStream;
 
 public interface CryptoModule {
 
-    byte[] encrypt(byte[] data);
+    DataWithLength encrypt(DataWithLength data);
 
-    byte[] decrypt(byte[] data);
+    DataWithLength decrypt(DataWithLength data);
+
+    /**
+     * Specify how many bytes of data are contained in one whole data package
+     * If it's 0, it means any length is acceptable
+     * @return
+     */
+    int getUnitPackageLength();
 
     default void doHandshakeAsServer(InputStream inputStream, OutputStream outputStream) throws IOException{
 
@@ -17,4 +24,5 @@ public interface CryptoModule {
     default void doHandshakeAsClient(InputStream inputStream, OutputStream outputStream) throws IOException{
 
     }
+
 }

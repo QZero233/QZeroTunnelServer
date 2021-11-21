@@ -1,6 +1,7 @@
-package com.qzero.tunnel.server.relay;
+package com.qzero.tunnel.relay;
 
-import com.qzero.tunnel.server.crypto.CryptoModule;
+import com.qzero.tunnel.crypto.CryptoModule;
+import com.qzero.tunnel.crypto.DataWithLength;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,33 +61,48 @@ public class RelaySession {
                 log.trace("Failed to close tunnel client connection",e);
             }
 
-            closeCallback.callback();
+            if(closeCallback!=null)
+                closeCallback.callback();
         };
 
+        //Read from direct
+        //And send to tunnel
         directToTunnel=new RelayThread(directClient, tunnelClient, synchronizedDisconnectListener, new DataPreprocessor() {
             @Override
-            public byte[] beforeSent(byte[] data) {
+            public DataWithLength beforeSent(DataWithLength data) {
                 if(tunnelToServerModule!=null){
                     return tunnelToServerModule.encrypt(data);
                 }else{
                     return data;
                 }
+
+
             }
 
             @Override
-            public byte[] afterReceived(byte[] data) {
+            public DataWithLength afterReceived(DataWithLength data) {
                 if(directToServerModule!=null){
                     return directToServerModule.decrypt(data);
                 }else{
                     return data;
                 }
             }
+
+            @Override
+            public int lengthOfReceive() {
+                //In this relay thread, we will read data from direct client
+                if(directToServerModule==null)
+                    return 0;
+                return directToServerModule.getUnitPackageLength();
+            }
         });
 
 
+        //Read from tunnel
+        //And send to direct
         tunnelToDirect=new RelayThread(tunnelClient, directClient, synchronizedDisconnectListener, new DataPreprocessor() {
             @Override
-            public byte[] beforeSent(byte[] data) {
+            public DataWithLength beforeSent(DataWithLength data) {
                 if(directToServerModule!=null){
                     return directToServerModule.encrypt(data);
                 }else{
@@ -95,14 +111,23 @@ public class RelaySession {
             }
 
             @Override
-            public byte[] afterReceived(byte[] data) {
+            public DataWithLength afterReceived(DataWithLength data) {
                 if(tunnelToServerModule!=null){
                     return tunnelToServerModule.decrypt(data);
                 }else{
                     return data;
                 }
             }
+
+            @Override
+            public int lengthOfReceive() {
+                //In this relay thread, we will read data from tunnel client
+                if(tunnelToServerModule==null)
+                    return 0;
+                return tunnelToServerModule.getUnitPackageLength();
+            }
         });
+        tunnelToDirect.setSourceTunnel(true);
 
         directToTunnel.start();
         tunnelToDirect.start();
@@ -127,7 +152,8 @@ public class RelaySession {
         }
         log.trace("Relay session has stopped");
 
-        closeCallback.callback();
+        if(closeCallback!=null)
+            closeCallback.callback();
     }
 
 }

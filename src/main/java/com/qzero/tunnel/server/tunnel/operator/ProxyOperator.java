@@ -1,18 +1,18 @@
 package com.qzero.tunnel.server.tunnel.operator;
 
+import com.qzero.tunnel.crypto.CryptoModule;
+import com.qzero.tunnel.crypto.CryptoModuleFactory;
+import com.qzero.tunnel.crypto.DataWithLength;
+import com.qzero.tunnel.relay.RelaySession;
 import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.authorize.AuthorizeService;
-import com.qzero.tunnel.server.crypto.CryptoModule;
-import com.qzero.tunnel.server.crypto.CryptoModuleFactory;
-import com.qzero.tunnel.server.crypto.modules.PlainModule;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.data.TunnelUser;
 import com.qzero.tunnel.server.proxy.ProxyDstInfo;
-import com.qzero.tunnel.server.relay.RelaySession;
 import com.qzero.tunnel.server.tunnel.NewClientConnectedCallback;
 import com.qzero.tunnel.server.tunnel.TunnelServerThread;
-import com.qzero.tunnel.server.utils.StreamUtils;
-import com.qzero.tunnel.server.utils.UUIDUtils;
+import com.qzero.tunnel.utils.StreamUtils;
+import com.qzero.tunnel.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class ProxyOperator implements TunnelOperator{
             }catch (Exception e1){}
         }
 
-        CryptoModule tunnelToServerModule=CryptoModuleFactory.getModule(tunnelConfig.getCryptoModuleName());
+        CryptoModule tunnelToServerModule= CryptoModuleFactory.getModule(tunnelConfig.getCryptoModuleName());
         try {
             tunnelToServerModule.doHandshakeAsServer(clientSocket.getInputStream(),clientSocket.getOutputStream());
         }catch (Exception e) {
@@ -70,11 +70,13 @@ public class ProxyOperator implements TunnelOperator{
         try {
             dstInfo= getProxyDestination(clientSocket,tunnelToServerModule);
 
+            log.trace(dstInfo+"");
+
             TunnelUser tunnelUser=authorizeService.getUserByToken(dstInfo.getUserToken());
             if(tunnelUser==null || !tunnelUser.getUsername().equals(tunnelConfig.getTunnelOwner()))
                 throw new Exception("Permission denied, no such a user or he has no access to this proxy tunnel");
         }catch (Exception e){
-            log.trace("Failed to do handshake with proxy client "+clientSocket.getInetAddress().getHostName(), e);
+            log.error("Failed to do handshake with proxy client "+clientSocket.getInetAddress().getHostName(), e);
 
             try {
                 clientSocket.close();
@@ -137,6 +139,7 @@ public class ProxyOperator implements TunnelOperator{
         }catch (Exception e){
             log.error("Failed to connect to remote host, relay session closed");
             relaySession.closeSession();
+            return;
         }
 
         String sessionId= UUIDUtils.getRandomUUID();
@@ -145,7 +148,7 @@ public class ProxyOperator implements TunnelOperator{
         });
         relaySessionMap.put(sessionId,relaySession);
 
-        relaySession.initializeCryptoModule(tunnelToServerModule,new PlainModule());
+        relaySession.initializeCryptoModule(tunnelToServerModule,null);
         relaySession.startRelay();
     }
 
@@ -161,11 +164,14 @@ public class ProxyOperator implements TunnelOperator{
     4 bytes port
      */
 
-    private ProxyDstInfo getProxyDestination(Socket clientSocket,CryptoModule cryptoModule) throws Exception{
+    private ProxyDstInfo getProxyDestination(Socket clientSocket, CryptoModule cryptoModule) throws Exception{
         InputStream is=clientSocket.getInputStream();
         int lengthOfEncrypted=StreamUtils.readIntWith4Bytes(is);
         byte[] buf=StreamUtils.readSpecifiedLengthDataFromInputStream(is,lengthOfEncrypted);
-        buf=cryptoModule.decrypt(buf);
+
+        DataWithLength data=new DataWithLength(buf,lengthOfEncrypted);
+        data=cryptoModule.decrypt(data);
+        buf=data.getData();
 
         ByteArrayInputStream byteArrayInputStream=new ByteArrayInputStream(buf);
 

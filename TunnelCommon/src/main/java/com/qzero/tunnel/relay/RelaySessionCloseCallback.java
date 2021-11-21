@@ -1,4 +1,4 @@
-package com.qzero.tunnel.server.relay;
+package com.qzero.tunnel.relay;
 
 public interface RelaySessionCloseCallback {
 
