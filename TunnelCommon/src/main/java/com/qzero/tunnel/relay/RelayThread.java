@@ -5,9 +5,11 @@ import com.qzero.tunnel.utils.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class RelayThread extends Thread {
 
@@ -54,17 +56,11 @@ public class RelayThread extends Thread {
                 //The head of package contains the length
 
                 while (true){
-                    //TODO handle the exception, make connection lost special
-                    int dataLength= StreamUtils.readIntWith4Bytes(sourceIs);//FIXME 关闭连接时可能报 Range [0, 0 + -1) out of bounds for length 4
+                    int dataLength= StreamUtils.readIntWith4Bytes(sourceIs);
                     byte[] buf=StreamUtils.readSpecifiedLengthDataFromInputStream(sourceIs,dataLength);
 
                     DataWithLength data=new DataWithLength(buf,dataLength);
-                    if(preprocessor!=null){
-                        data=preprocessor.afterReceived(data);
-                        data=preprocessor.beforeSent(data);
-                    }
-
-                    dstOs.write(data.getData(),0,data.getLength());
+                    writeDataToDst(data,dstOs);
                 }
             }else {
                 if (length <= 0) {
@@ -81,14 +77,7 @@ public class RelayThread extends Thread {
                         }
 
                         DataWithLength data=new DataWithLength(buf,len);
-                        if (preprocessor != null) {
-                            data = preprocessor.afterReceived(data);
-                            data = preprocessor.beforeSent(data);
-                        }
-
-                        if(!isSourceTunnel)
-                            StreamUtils.writeIntWith4Bytes(dstOs,data.getLength());
-                        dstOs.write(data.getData(), 0, data.getLength());
+                        writeDataToDst(data,dstOs);
                     }
                 } else if (length == 1) {
                     //When length is 1
@@ -106,14 +95,7 @@ public class RelayThread extends Thread {
                         byte[] buf = new byte[]{(byte) b};
 
                         DataWithLength data=new DataWithLength(buf,1);
-                        if (preprocessor != null) {
-                            data = preprocessor.afterReceived(data);
-                            data = preprocessor.beforeSent(data);
-                        }
-
-                        if(!isSourceTunnel)
-                            StreamUtils.writeIntWith4Bytes(dstOs,data.getLength());
-                        dstOs.write(data.getData(), 0, data.getLength());
+                        writeDataToDst(data,dstOs);
                     }
                 } else {
                     //In this case, we need array
@@ -144,18 +126,17 @@ public class RelayThread extends Thread {
                         }
 
                         DataWithLength data=new DataWithLength(buf,totalRead);
-                        if (preprocessor != null) {
-                            data = preprocessor.afterReceived(data);
-                            data = preprocessor.beforeSent(data);
-                        }
-
-                        if(!isSourceTunnel)
-                            StreamUtils.writeIntWith4Bytes(dstOs,data.getLength());
-                        dstOs.write(data.getData(), 0, data.getLength());
+                        writeDataToDst(data,dstOs);
                     }
                 }
             }
 
+        }catch (SocketException socketException){
+            log.trace(String.format("Relay route from %s to %s has been interrupted due to connection lost",
+                    source.getInetAddress().getHostAddress(),destination.getInetAddress().getHostAddress()));
+        }catch (IOException ioException){
+            log.trace(String.format("Relay route from %s to %s has been interrupted due to connection lost",
+                    source.getInetAddress().getHostAddress(),destination.getInetAddress().getHostAddress()));
         }catch (Exception e){
             if(isInterrupted()){
                 log.trace(String.format("Relay route from %s to %s has been interrupted",
@@ -167,5 +148,30 @@ public class RelayThread extends Thread {
         }
 
         listener.onDisconnected();
+    }
+
+    /**
+     * Let data go through preprocessor
+     * and send length
+     * then send data
+     * @param data
+     */
+    private void writeDataToDst(DataWithLength data, OutputStream dstOs) throws Exception{
+        if (preprocessor != null) {
+            data = preprocessor.afterReceived(data);
+            data = preprocessor.beforeSent(data);
+        }
+
+        if(data==null){
+            //Which means some crypto error occurs
+            //In respect of the completeness of data
+            //We will close this relay session
+
+            throw new Exception("Relay session is forced to close due to crypto error");
+        }
+
+        if(!isSourceTunnel)
+            StreamUtils.writeIntWith4Bytes(dstOs,data.getLength());
+        dstOs.write(data.getData(), 0, data.getLength());
     }
 }

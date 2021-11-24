@@ -82,6 +82,8 @@ public class StreamUtils {
         int len;
         while (true) {
             len = is.read(buf, 0, length);
+            if(len==-1)
+                throw new IOException("End of stream");
             length -= len;
             outputStream.write(buf, 0, len);
             if (length == 0)

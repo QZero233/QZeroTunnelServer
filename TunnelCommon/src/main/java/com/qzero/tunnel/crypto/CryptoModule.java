@@ -6,9 +6,9 @@ import java.io.OutputStream;
 
 public interface CryptoModule {
 
-    DataWithLength encrypt(DataWithLength data);
+    DataWithLength encrypt(DataWithLength data) throws CryptoException;
 
-    DataWithLength decrypt(DataWithLength data);
+    DataWithLength decrypt(DataWithLength data) throws CryptoException;
 
     /**
      * Specify how many bytes of data are contained in one whole data package

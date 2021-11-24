@@ -1,5 +1,6 @@
 package com.qzero.tunnel.relay;
 
+import com.qzero.tunnel.crypto.CryptoException;
 import com.qzero.tunnel.crypto.CryptoModule;
 import com.qzero.tunnel.crypto.DataWithLength;
 import org.slf4j.Logger;
@@ -71,18 +72,26 @@ public class RelaySession {
             @Override
             public DataWithLength beforeSent(DataWithLength data) {
                 if(tunnelToServerModule!=null){
-                    return tunnelToServerModule.encrypt(data);
+                    try {
+                        return tunnelToServerModule.encrypt(data);
+                    }catch (CryptoException e){
+                        log.error("Failed to encrypted data",e);
+                        return null;
+                    }
                 }else{
                     return data;
                 }
-
-
             }
 
             @Override
             public DataWithLength afterReceived(DataWithLength data) {
                 if(directToServerModule!=null){
-                    return directToServerModule.decrypt(data);
+                    try {
+                        return directToServerModule.decrypt(data);
+                    }catch (CryptoException e){
+                        log.error("Failed to decrypted data",e);
+                        return null;
+                    }
                 }else{
                     return data;
                 }
@@ -104,7 +113,12 @@ public class RelaySession {
             @Override
             public DataWithLength beforeSent(DataWithLength data) {
                 if(directToServerModule!=null){
-                    return directToServerModule.encrypt(data);
+                    try {
+                        return directToServerModule.encrypt(data);
+                    }catch (CryptoException e){
+                        log.error("Failed to encrypted data",e);
+                        return null;
+                    }
                 }else{
                     return data;
                 }
@@ -113,7 +127,12 @@ public class RelaySession {
             @Override
             public DataWithLength afterReceived(DataWithLength data) {
                 if(tunnelToServerModule!=null){
-                    return tunnelToServerModule.decrypt(data);
+                    try {
+                        return tunnelToServerModule.decrypt(data);
+                    }catch (CryptoException e){
+                        log.error("Failed to decrypted data",e);
+                        return null;
+                    }
                 }else{
                     return data;
                 }

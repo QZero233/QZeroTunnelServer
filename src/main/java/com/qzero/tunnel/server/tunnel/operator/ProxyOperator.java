@@ -137,7 +137,7 @@ public class ProxyOperator implements TunnelOperator{
             Socket remote=new Socket(handshakeInfo.getHost(),handshakeInfo.getPort());
             relaySession.setDirectClient(remote);
         }catch (Exception e){
-            log.error("Failed to connect to remote host, relay session closed");
+            log.trace("Failed to connect to remote host, relay session closed");
             relaySession.closeSession();
             return;
         }
@@ -171,6 +171,12 @@ public class ProxyOperator implements TunnelOperator{
 
         DataWithLength data=new DataWithLength(buf,lengthOfEncrypted);
         data=cryptoModule.decrypt(data);
+
+        if(data==null){
+            //Normally it won't return null, it will throw exception
+            throw new Exception("Crypto error without throwing exception");
+        }
+
         buf=data.getData();
 
         ByteArrayInputStream byteArrayInputStream=new ByteArrayInputStream(buf);
