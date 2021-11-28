@@ -33,11 +33,6 @@ public class PlainModule implements CryptoModule {
     }
 
     @Override
-    public int getUnitPackageLength() {
-        return unitPackageLength;
-    }
-
-    @Override
     public void doHandshakeAsClient(InputStream inputStream, OutputStream outputStream) throws IOException {
         CryptoModule.super.doHandshakeAsClient(inputStream, outputStream);
     }

@@ -10,13 +10,6 @@ public interface CryptoModule {
 
     DataWithLength decrypt(DataWithLength data) throws CryptoException;
 
-    /**
-     * Specify how many bytes of data are contained in one whole data package
-     * If it's 0, it means any length is acceptable
-     * @return
-     */
-    int getUnitPackageLength();
-
     default void doHandshakeAsServer(InputStream inputStream, OutputStream outputStream) throws IOException{
 
     }

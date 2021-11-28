@@ -97,13 +97,6 @@ public class RelaySession {
                 }
             }
 
-            @Override
-            public int lengthOfReceive() {
-                //In this relay thread, we will read data from direct client
-                if(directToServerModule==null)
-                    return 0;
-                return directToServerModule.getUnitPackageLength();
-            }
         });
 
 
@@ -138,13 +131,6 @@ public class RelaySession {
                 }
             }
 
-            @Override
-            public int lengthOfReceive() {
-                //In this relay thread, we will read data from tunnel client
-                if(tunnelToServerModule==null)
-                    return 0;
-                return tunnelToServerModule.getUnitPackageLength();
-            }
         });
         tunnelToDirect.setSourceTunnel(true);
 

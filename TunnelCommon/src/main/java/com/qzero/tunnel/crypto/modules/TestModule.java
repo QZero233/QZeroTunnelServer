@@ -51,8 +51,4 @@ public class TestModule implements CryptoModule {
         return data;
     }
 
-    @Override
-    public int getUnitPackageLength() {
-        return 0;
-    }
 }

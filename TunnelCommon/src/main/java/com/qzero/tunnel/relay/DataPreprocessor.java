@@ -8,10 +8,4 @@ public interface DataPreprocessor {
 
     DataWithLength afterReceived(DataWithLength data);
 
-    /**
-     * Determine how many bytes should be read each time
-     * @return
-     */
-    int lengthOfReceive();
-
 }
