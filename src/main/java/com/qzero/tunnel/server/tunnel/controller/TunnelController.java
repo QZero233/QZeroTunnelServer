@@ -26,17 +26,6 @@ public class TunnelController {
     public ActionResult updateCryptoModule(@PathVariable("tunnel_port") int tunnelPort,
                                            @RequestParam("crypto_module_name") String cryptoModuleName,
                                            @RequestHeader("username") String username) throws ResponsiveException {
-        if(tunnelService.isTunnelRunning(tunnelPort)){
-            throw new ResponsiveException(ErrorCodeList.CODE_BAD_REQUEST_PARAMETER,"Can not update cryptoModule when tunnel is running");
-        }
-
-        return updateCryptoModuleHot(tunnelPort,cryptoModuleName,username);
-    }
-
-    @PutMapping("/{tunnel_port}/crypto_module_name/hot")
-    public ActionResult updateCryptoModuleHot(@PathVariable("tunnel_port") int tunnelPort,
-                                           @RequestParam("crypto_module_name") String cryptoModuleName,
-                                           @RequestHeader("username") String username) throws ResponsiveException {
         tunnelService.checkTunnelExistenceAndPermission(tunnelPort,username);
 
         TunnelConfig tunnelConfig=tunnelService.getTunnelConfig(tunnelPort);

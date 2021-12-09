@@ -51,8 +51,8 @@ public class NATTraverseMappingController {
         return new ActionResult(true,null);
     }
 
-    @PutMapping("/{tunnel_port}/hot")
-    public ActionResult updateNATTraverseMappingHot(@PathVariable("tunnel_port") int tunnelPort,
+    @PutMapping("/{tunnel_port}")
+    public ActionResult updateNATTraverseMapping(@PathVariable("tunnel_port") int tunnelPort,
                                                     @RequestParam("local_ip") String localIp,
                                                     @RequestParam("local_port") int localPort,
                                                     @RequestHeader("username") String username) throws ResponsiveException {
@@ -70,18 +70,6 @@ public class NATTraverseMappingController {
         natTraverseMappingService.updateNATTraverseMapping(natTraverseMapping);
 
         return new ActionResult(true,null);
-    }
-
-    @PutMapping("/{tunnel_port}")
-    public ActionResult updateNATTraverseMapping(@PathVariable("tunnel_port") int tunnelPort,
-                                                    @RequestParam("local_ip") String localIp,
-                                                    @RequestParam("local_port") int localPort,
-                                                    @RequestHeader("username") String username) throws ResponsiveException {
-        if(tunnelService.isTunnelRunning(tunnelPort)){
-            throw new ResponsiveException(ErrorCodeList.CODE_BAD_REQUEST_PARAMETER,"Can not update cryptoModule when tunnel is running");
-        }
-
-        return updateNATTraverseMappingHot(tunnelPort,localIp,localPort,username);
     }
 
     @GetMapping("/{tunnel_port}")

@@ -5,11 +5,13 @@ import com.qzero.tunnel.crypto.CryptoModuleFactory;
 import com.qzero.tunnel.crypto.DataWithLength;
 import com.qzero.tunnel.relay.RelaySession;
 import com.qzero.tunnel.relay.RelayStrategy;
+import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.relay.remind.RemindClientContainer;
 import com.qzero.tunnel.server.relay.remind.RemindClientProcessThread;
 import com.qzero.tunnel.server.virtual.VirtualNetworkDestination;
+import com.qzero.tunnel.server.virtual.VirtualNetworkMappingService;
 import com.qzero.tunnel.utils.StreamUtils;
 import com.qzero.tunnel.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -22,10 +24,11 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 //FIXME check user's identity
-//FIXME 修改加密模块后热修改不起作用，需重启服务器生效
 public class VirtualNetworkOperator extends BaseTunnelOperator implements TunnelOperator {
 
     private Logger log= LoggerFactory.getLogger(getClass());
+
+    private VirtualNetworkMappingService service= SpringUtil.getBean(VirtualNetworkMappingService.class);
 
     public VirtualNetworkOperator(TunnelConfig config) {
         super(config);
@@ -149,9 +152,11 @@ public class VirtualNetworkOperator extends BaseTunnelOperator implements Tunnel
         //Construct input stream to read
         ByteArrayInputStream byteArrayInputStream=new ByteArrayInputStream(buf);
 
-        int usernameLength= StreamUtils.readIntWith4Bytes(byteArrayInputStream);
-        byte[] usernameBuf=StreamUtils.readSpecifiedLengthDataFromInputStream(byteArrayInputStream,usernameLength);
-        String username=new String(usernameBuf);
+        int dstIdentityLength= StreamUtils.readIntWith4Bytes(byteArrayInputStream);
+        byte[] dstIdentityBuf=StreamUtils.readSpecifiedLengthDataFromInputStream(byteArrayInputStream,dstIdentityLength);
+        String dstIdentity=new String(dstIdentityBuf);
+
+        String username=service.findDstUser(dstIdentity);
 
         int port=StreamUtils.readIntWith4Bytes(byteArrayInputStream);
 

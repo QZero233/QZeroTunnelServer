@@ -72,4 +72,9 @@ public abstract class BaseTunnelOperator implements TunnelOperator {
      * @param clientSocket
      */
     protected abstract void onNewClientConnected(Socket clientSocket);
+
+    @Override
+    public void updateTunnelConfig(TunnelConfig newConfig) {
+        this.config=newConfig;
+    }
 }

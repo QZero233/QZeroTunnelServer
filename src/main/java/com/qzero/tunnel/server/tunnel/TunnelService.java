@@ -29,8 +29,6 @@ public class TunnelService {
 
     private final TunnelConfigRepository configRepository;
 
-
-
     @Autowired
     public TunnelService(PortConfig config, TunnelConfigRepository configRepository){
         if(config.getBannedPorts()!=null)
@@ -50,6 +48,10 @@ public class TunnelService {
 
         configRepository.save(config);
 
+        if(tunnelMap.containsKey(config.getTunnelPort())){
+            //Update config inside the operator
+            tunnelMap.get(config.getTunnelPort()).updateTunnelConfig(config);
+        }
     }
 
     public void newTunnel(TunnelConfig config) throws TunnelPortOccupiedException {
