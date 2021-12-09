@@ -17,6 +17,7 @@ public class TunnelConfig {
 
     public static final int TYPE_NAT_TRAVERSE=1;
     public static final int TYPE_PROXY=2;
+    public static final int TYPE_VIRTUAL_NETWORK=3;
 
     public TunnelConfig() {
     }

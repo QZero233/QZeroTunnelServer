@@ -1,4 +1,4 @@
-package com.qzero.tunnel.server.traverse.remind;
+package com.qzero.tunnel.server.relay.remind;
 
 import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.authorize.AuthorizeService;
@@ -63,7 +63,7 @@ public class RemindClientProcessThread extends Thread {
 
         try {
             clientSocket.close();
-            log.trace("NAT traverse connect remind server lost connection with client "+clientIp);
+            log.trace("Relay session remind server lost connection with client "+clientIp);
         }catch (Exception e){
             log.trace("Failed to close connection with client "+clientIp,e);
         }
@@ -97,10 +97,30 @@ public class RemindClientProcessThread extends Thread {
         pw.println("succeeded");
         pw.flush();
 
-        RemindClientContainer.getInstance().addClient(username,this);
+        //Check if another client with the same username is online
+        RemindClientContainer container=RemindClientContainer.getInstance();
+        if(container.hasOnlineClient(username)){
+            //Make it offline
+            RemindClientProcessThread processThread=container.getClient(username);
+            processThread.closeConnection();
+            container.removeClient(username);
+        }
+
+        //Add into map
+        container.addClient(username,this);
     }
 
-    public void remindRelayConnect(TunnelConfig config,NATTraverseMapping mapping, String sessionId) {
+    public void closeConnection(){
+        interrupt();
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            log.error("Failed to close NAT Traverse remind connection with client "+clientIp,e);
+        }
+    }
+
+    public void remindRelayConnect(TunnelConfig config, NATTraverseMapping mapping, String sessionId) {
+        //Let client establish connection with local server
         pw.println(String.format("%d %s %s %d %s", config.getTunnelPort(), sessionId,
                 mapping.getLocalIp(), mapping.getLocalPort(),config.getCryptoModuleName()));
         pw.flush();

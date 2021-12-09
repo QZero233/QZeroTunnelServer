@@ -22,7 +22,7 @@ public class RelayThread extends Thread {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private boolean isSourceTunnel = false;
+    private RelayStrategy relayStrategy=new RelayStrategy(true,true);
 
     public RelayThread(Socket source, Socket destination, ClientDisconnectedListener listener) {
         this.source = source;
@@ -37,8 +37,8 @@ public class RelayThread extends Thread {
         this.preprocessor = preprocessor;
     }
 
-    public void setSourceTunnel(boolean sourceTunnel) {
-        isSourceTunnel = sourceTunnel;
+    public void setRelayStrategy(RelayStrategy relayStrategy) {
+        this.relayStrategy = relayStrategy;
     }
 
     @Override
@@ -49,8 +49,7 @@ public class RelayThread extends Thread {
             InputStream sourceIs = source.getInputStream();
             OutputStream dstOs = destination.getOutputStream();
 
-            if (isSourceTunnel) {
-                //Read from tunnel
+            if (!relayStrategy.isDirectlyRead()) {
                 //The head of package contains the length
 
                 while (true) {
@@ -117,7 +116,7 @@ public class RelayThread extends Thread {
             throw new Exception("Relay session is forced to close due to crypto error");
         }
 
-        if (!isSourceTunnel)
+        if (!relayStrategy.isDirectlySend())
             StreamUtils.writeIntWith4Bytes(dstOs, data.getLength());
         dstOs.write(data.getData(), 0, data.getLength());
     }

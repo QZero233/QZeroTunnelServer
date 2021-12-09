@@ -1,16 +1,13 @@
 package com.qzero.tunnel.server.tunnel;
 
 import com.qzero.tunnel.server.config.PortConfig;
-import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
-import com.qzero.tunnel.server.data.repositories.NATTraverseMappingRepository;
 import com.qzero.tunnel.server.data.repositories.TunnelConfigRepository;
 import com.qzero.tunnel.server.exception.ErrorCodeList;
 import com.qzero.tunnel.server.exception.ResponsiveException;
 import com.qzero.tunnel.server.exception.TunnelDoesNotExistException;
 import com.qzero.tunnel.server.exception.TunnelPortOccupiedException;
-import com.qzero.tunnel.server.traverse.remind.RemindClientContainer;
-import com.qzero.tunnel.server.tunnel.operator.NATTraverseTunnelOperator;
+import com.qzero.tunnel.server.relay.remind.RemindClientContainer;
 import com.qzero.tunnel.server.tunnel.operator.TunnelOperator;
 import com.qzero.tunnel.server.tunnel.operator.TunnelOperatorFactory;
 import org.springframework.beans.factory.annotation.Autowired;

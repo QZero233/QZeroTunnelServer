@@ -1,9 +1,10 @@
-package com.qzero.tunnel.server.traverse;
+package com.qzero.tunnel.server.relay.reception;
 
 import com.qzero.tunnel.server.SpringUtil;
 import com.qzero.tunnel.server.tunnel.TunnelService;
 import com.qzero.tunnel.server.tunnel.operator.NATTraverseTunnelOperator;
 import com.qzero.tunnel.server.tunnel.operator.TunnelOperator;
+import com.qzero.tunnel.server.tunnel.operator.VirtualNetworkOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,29 +69,45 @@ public class RelayServerReceptionProcessThread extends Thread {
 
         TunnelOperator tunnelOperator=tunnelManager.getTunnelOperator(tunnelPort);
 
-        if(tunnelOperator==null || !(tunnelOperator instanceof NATTraverseTunnelOperator)){
-            pw.println("NAT traverse tunnel with port "+tunnelPort+" does not exist");
+        if(tunnelOperator==null || !tunnelOperator.isTunnelRunning()){
+            pw.println("Tunnel with port "+tunnelPort+" is not running");
             pw.flush();
             try {
                 clientSocket.close();
-            }catch (Exception e1){
-
-            }
+            }catch (Exception e1){}
             return;
         }
 
-        NATTraverseTunnelOperator operator= (NATTraverseTunnelOperator) tunnelOperator;
-
-        try {
-            operator.startRelaySession(sessionId,clientSocket);
-        } catch (Exception e) {
-            pw.println("Failed to start relay session with client\nReason: "+e.getMessage());
+        if(tunnelOperator instanceof NATTraverseTunnelOperator){
+            NATTraverseTunnelOperator operator= (NATTraverseTunnelOperator) tunnelOperator;
+            try {
+                operator.startRelaySession(sessionId,clientSocket);
+            } catch (Exception e) {
+                pw.println("Failed to start relay session with client\nReason: "+e.getMessage());
+                pw.flush();
+                try {
+                    clientSocket.close();
+                }catch (Exception e1){}
+                return;
+            }
+        }else if(tunnelOperator instanceof VirtualNetworkOperator){
+            VirtualNetworkOperator operator=(VirtualNetworkOperator) tunnelOperator;
+            try {
+                operator.startRelaySession(sessionId,clientSocket);
+            }catch (Exception e){
+                pw.println("Failed to start relay session with client\nReason: "+e.getMessage());
+                pw.flush();
+                try {
+                    clientSocket.close();
+                }catch (Exception e1){}
+                return;
+            }
+        }else{
+            pw.println("Tunnel with port "+tunnelPort+" is not a supported type");
             pw.flush();
             try {
                 clientSocket.close();
-            }catch (Exception e1){
-
-            }
+            }catch (Exception e1){}
             return;
         }
     }

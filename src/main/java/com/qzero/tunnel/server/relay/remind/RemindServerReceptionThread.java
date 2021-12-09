@@ -1,4 +1,4 @@
-package com.qzero.tunnel.server.traverse.remind;
+package com.qzero.tunnel.server.relay.remind;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

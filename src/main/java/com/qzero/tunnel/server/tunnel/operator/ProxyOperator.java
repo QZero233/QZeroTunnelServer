@@ -9,8 +9,6 @@ import com.qzero.tunnel.server.authorize.AuthorizeService;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.data.TunnelUser;
 import com.qzero.tunnel.server.proxy.ProxyDstInfo;
-import com.qzero.tunnel.server.tunnel.NewClientConnectedCallback;
-import com.qzero.tunnel.server.tunnel.TunnelServerThread;
 import com.qzero.tunnel.utils.StreamUtils;
 import com.qzero.tunnel.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -21,27 +19,23 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
-public class ProxyOperator implements TunnelOperator{
+public class ProxyOperator extends BaseTunnelOperator implements TunnelOperator{
 
     private Logger log= LoggerFactory.getLogger(getClass());
 
     private AuthorizeService authorizeService;
 
-    private TunnelConfig tunnelConfig;
+    public ProxyOperator(TunnelConfig config) {
+        super(config);
+        authorizeService= SpringUtil.getBean(AuthorizeService.class);
+    }
 
-    private TunnelServerThread tunnelServerThread;
-    private boolean isRunning=false;
-
-    private Map<String,RelaySession> relaySessionMap=new HashMap<>();
-
-    private NewClientConnectedCallback callback=clientSocket -> {
+    @Override
+    protected void onNewClientConnected(Socket clientSocket) {
         //Send crypto module name to client
         try {
-            String cryptoModuleName=tunnelConfig.getCryptoModuleName();
+            String cryptoModuleName= config.getCryptoModuleName();
 
             OutputStream os=clientSocket.getOutputStream();
             StreamUtils.writeIntWith4Bytes(os,cryptoModuleName.getBytes(StandardCharsets.UTF_8).length);
@@ -53,7 +47,7 @@ public class ProxyOperator implements TunnelOperator{
             }catch (Exception e1){}
         }
 
-        CryptoModule tunnelToServerModule= CryptoModuleFactory.getModule(tunnelConfig.getCryptoModuleName());
+        CryptoModule tunnelToServerModule= CryptoModuleFactory.getModule(config.getCryptoModuleName());
         try {
             tunnelToServerModule.doHandshakeAsServer(clientSocket.getInputStream(),clientSocket.getOutputStream());
         }catch (Exception e) {
@@ -73,7 +67,7 @@ public class ProxyOperator implements TunnelOperator{
             log.trace(dstInfo+"");
 
             TunnelUser tunnelUser=authorizeService.getUserByToken(dstInfo.getUserToken());
-            if(tunnelUser==null || !tunnelUser.getUsername().equals(tunnelConfig.getTunnelOwner()))
+            if(tunnelUser==null || !tunnelUser.getUsername().equals(config.getTunnelOwner()))
                 throw new Exception("Permission denied, no such a user or he has no access to this proxy tunnel");
         }catch (Exception e){
             log.error("Failed to do handshake with proxy client "+clientSocket.getInetAddress().getHostName(), e);
@@ -86,47 +80,6 @@ public class ProxyOperator implements TunnelOperator{
         }
 
         startProxyRelaySession(dstInfo,clientSocket,tunnelToServerModule);
-    };
-
-    public ProxyOperator(TunnelConfig tunnelConfig) {
-        this.tunnelConfig = tunnelConfig;
-        authorizeService= SpringUtil.getBean(AuthorizeService.class);
-    }
-
-    @Override
-    public void openTunnel() throws Exception {
-        if(!CryptoModuleFactory.hasModule(tunnelConfig.getCryptoModuleName())){
-            throw new Exception(String.format("Crypto module named %s does not exist", tunnelConfig.getCryptoModuleName()));
-        }
-
-        if(isRunning){
-            throw new Exception("Tunnel is running, can not open it");
-        }
-
-        tunnelServerThread=new TunnelServerThread(tunnelConfig,callback);
-        tunnelServerThread.startServerSocket();
-        tunnelServerThread.start();
-        isRunning=true;
-    }
-
-    @Override
-    public void closeTunnel() throws Exception {
-        if(!isRunning){
-            throw new Exception("Tunnel is not running, can not close it");
-        }
-
-        tunnelServerThread.closeTunnel();
-
-        Set<String> keySet=relaySessionMap.keySet();
-        for(String key:keySet){
-            relaySessionMap.get(key).closeSession();
-        }
-        isRunning=false;
-    }
-
-    @Override
-    public boolean isTunnelRunning() {
-        return isRunning;
     }
 
     private void startProxyRelaySession(ProxyDstInfo handshakeInfo, Socket clientSocket, CryptoModule tunnelToServerModule){
@@ -144,9 +97,9 @@ public class ProxyOperator implements TunnelOperator{
 
         String sessionId= UUIDUtils.getRandomUUID();
         relaySession.setCloseCallback(()->{
-            relaySessionMap.remove(sessionId);
+            sessionMap.remove(sessionId);
         });
-        relaySessionMap.put(sessionId,relaySession);
+        sessionMap.put(sessionId,relaySession);
 
         relaySession.initializeCryptoModule(tunnelToServerModule,null);
         relaySession.startRelay();
@@ -163,7 +116,6 @@ public class ProxyOperator implements TunnelOperator{
     n bytes host
     4 bytes port
      */
-
     private ProxyDstInfo getProxyDestination(Socket clientSocket, CryptoModule cryptoModule) throws Exception{
         InputStream is=clientSocket.getInputStream();
         int lengthOfEncrypted=StreamUtils.readIntWith4Bytes(is);

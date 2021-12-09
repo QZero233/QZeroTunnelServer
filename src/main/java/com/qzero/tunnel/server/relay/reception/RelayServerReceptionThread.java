@@ -1,4 +1,4 @@
-package com.qzero.tunnel.server.traverse;
+package com.qzero.tunnel.server.relay.reception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

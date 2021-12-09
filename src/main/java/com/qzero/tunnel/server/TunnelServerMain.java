@@ -1,8 +1,8 @@
 package com.qzero.tunnel.server;
 
 import com.qzero.tunnel.server.config.PortConfig;
-import com.qzero.tunnel.server.traverse.RelayServerReceptionThread;
-import com.qzero.tunnel.server.traverse.remind.RemindServerReceptionThread;
+import com.qzero.tunnel.server.relay.reception.RelayServerReceptionThread;
+import com.qzero.tunnel.server.relay.remind.RemindServerReceptionThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -34,7 +34,7 @@ public class TunnelServerMain implements ApplicationRunner {
         try {
             new RemindServerReceptionThread(serverConfig.getRemindServerPort()).start();
         }catch (Exception e){
-            log.error("Failed to start command server, program is shutting down",e);
+            log.error("Failed to start remind server, program is shutting down",e);
             System.exit(0);
         }
 

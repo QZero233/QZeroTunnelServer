@@ -5,6 +5,8 @@ public interface TunnelOperator {
     void openTunnel() throws Exception;
     void closeTunnel() throws Exception;
 
+
+
     boolean isTunnelRunning();
 
 }

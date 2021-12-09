@@ -23,6 +23,11 @@ public class RelaySession {
     private CryptoModule tunnelToServerModule;
     private CryptoModule directToServerModule;
 
+    //For default, it will read from tunnel indirectly and send to client directly
+    private RelayStrategy tunnelToDirectStrategy=new RelayStrategy(true,false);
+    //For default, it will read from client directly and send to tunnel indirectly
+    private RelayStrategy directToTunnelStrategy=new RelayStrategy(false,true);
+
     public void setCloseCallback(RelaySessionCloseCallback closeCallback) {
         this.closeCallback = closeCallback;
     }
@@ -35,9 +40,25 @@ public class RelaySession {
         this.tunnelClient = tunnelClient;
     }
 
-    public void initializeCryptoModule(CryptoModule tunnelToServerModule,CryptoModule directToServerModule){
+    public void setTunnelToDirectStrategy(RelayStrategy tunnelToDirectStrategy) {
+        this.tunnelToDirectStrategy = tunnelToDirectStrategy;
+    }
+
+    public void setDirectToTunnelStrategy(RelayStrategy directToTunnelStrategy) {
+        this.directToTunnelStrategy = directToTunnelStrategy;
+    }
+
+    public void initializeCryptoModule(CryptoModule tunnelToServerModule, CryptoModule directToServerModule){
         this.tunnelToServerModule=tunnelToServerModule;
         this.directToServerModule=directToServerModule;
+    }
+
+    public void setTunnelToServerModule(CryptoModule tunnelToServerModule) {
+        this.tunnelToServerModule = tunnelToServerModule;
+    }
+
+    public void setDirectToServerModule(CryptoModule directToServerModule) {
+        this.directToServerModule = directToServerModule;
     }
 
     public void startRelay(){
@@ -98,6 +119,7 @@ public class RelaySession {
             }
 
         });
+        directToTunnel.setRelayStrategy(directToTunnelStrategy);
 
 
         //Read from tunnel
@@ -132,7 +154,7 @@ public class RelaySession {
             }
 
         });
-        tunnelToDirect.setSourceTunnel(true);
+        tunnelToDirect.setRelayStrategy(tunnelToDirectStrategy);
 
         directToTunnel.start();
         tunnelToDirect.start();

@@ -12,6 +12,8 @@ public class TunnelOperatorFactory {
                 return new NATTraverseTunnelOperator(config);
             case TunnelConfig.TYPE_PROXY:
                 return new ProxyOperator(config);
+            case TunnelConfig.TYPE_VIRTUAL_NETWORK:
+                return new VirtualNetworkOperator(config);
             default:
                 return null;
         }
