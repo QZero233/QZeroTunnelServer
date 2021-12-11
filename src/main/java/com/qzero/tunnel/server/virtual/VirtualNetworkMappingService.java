@@ -6,17 +6,20 @@ import com.qzero.tunnel.server.exception.ResponsiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+
 @Service
+@Transactional
 public class VirtualNetworkMappingService {
 
     @Autowired
     private VirtualNetworkMappingRepository repository;
 
     public String findDstUser(String dstIdentity) throws ResponsiveException {
-        VirtualNetworkMapping mapping=repository.getById(dstIdentity);
-        if(mapping==null)
+        if(!repository.existsById(dstIdentity))
             throw new MissingIdentityException(dstIdentity);
 
+        VirtualNetworkMapping mapping=repository.getById(dstIdentity);
         return mapping.getDstUserName();
     }
 

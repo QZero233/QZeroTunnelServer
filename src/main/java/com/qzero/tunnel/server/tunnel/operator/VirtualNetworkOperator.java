@@ -10,6 +10,7 @@ import com.qzero.tunnel.server.data.NATTraverseMapping;
 import com.qzero.tunnel.server.data.TunnelConfig;
 import com.qzero.tunnel.server.relay.remind.RemindClientContainer;
 import com.qzero.tunnel.server.relay.remind.RemindClientProcessThread;
+import com.qzero.tunnel.server.virtual.MissingIdentityException;
 import com.qzero.tunnel.server.virtual.VirtualNetworkDestination;
 import com.qzero.tunnel.server.virtual.VirtualNetworkMappingService;
 import com.qzero.tunnel.utils.StreamUtils;
@@ -84,7 +85,10 @@ public class VirtualNetworkOperator extends BaseTunnelOperator implements Tunnel
         VirtualNetworkDestination destination;
         try {
             destination=doHandshake(clientSocket,directToServerModule);
-        } catch (Exception e) {
+        }catch (MissingIdentityException e1){
+            log.trace(e1.getErrorMessage());
+            return;
+        }catch (Exception e) {
             log.error("Failed to do handshake with virtual network client "+clientSocket.getInetAddress().getHostAddress(),e);
 
             //Disconnect
