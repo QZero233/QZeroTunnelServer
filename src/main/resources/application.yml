@@ -1,5 +1,10 @@
 spring:
+  datasource:
+    driver-class-name: "org.sqlite.JDBC"
+    url: "jdbc:sqlite:data.db"
+    type: org.sqlite.SQLiteDataSource
   jpa:
+    database-platform: com.qzero.tunnel.server.sqlite.SQLiteDialect
     hibernate:
       ddl-auto: update
 debug: false
