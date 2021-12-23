@@ -23,13 +23,12 @@ public class NATTraverseMappingController {
 
     @PostMapping("/{tunnel_port}")
     public ActionResult newNATTraverseMapping(@PathVariable("tunnel_port") int tunnelPort,
-                                              @RequestParam("local_ip") String localIp,
-                                              @RequestParam("local_port") int localPort,
+                                              @RequestBody NATTraverseMapping natTraverseMapping,
                                               @RequestHeader("username") String username) throws ResponsiveException {
 
         tunnelService.checkTunnelExistenceAndPermission(tunnelPort,username);
 
-        NATTraverseMapping natTraverseMapping=new NATTraverseMapping(tunnelPort,localIp,localPort);
+        natTraverseMapping.setTunnelPort(tunnelPort);
         natTraverseMappingService.newNATTraverseMapping(natTraverseMapping);
 
         return new ActionResult(true,null);
@@ -53,8 +52,7 @@ public class NATTraverseMappingController {
 
     @PutMapping("/{tunnel_port}")
     public ActionResult updateNATTraverseMapping(@PathVariable("tunnel_port") int tunnelPort,
-                                                    @RequestParam("local_ip") String localIp,
-                                                    @RequestParam("local_port") int localPort,
+                                                 @RequestBody NATTraverseMapping natTraverseMapping,
                                                     @RequestHeader("username") String username) throws ResponsiveException {
 
         tunnelService.checkTunnelExistenceAndPermission(tunnelPort,username);
@@ -64,10 +62,10 @@ public class NATTraverseMappingController {
                     String.format("NAT traverse mapping attached to tunnel port %d does not exist", tunnelPort));
         }
 
-        NATTraverseMapping natTraverseMapping=natTraverseMappingService.getNATTraverseMapping(tunnelPort);
-        natTraverseMapping.setLocalIp(localIp);
-        natTraverseMapping.setLocalPort(localPort);
-        natTraverseMappingService.updateNATTraverseMapping(natTraverseMapping);
+        NATTraverseMapping natTraverseMappingOld=natTraverseMappingService.getNATTraverseMapping(tunnelPort);
+        natTraverseMappingOld.setLocalIp(natTraverseMapping.getLocalIp());
+        natTraverseMappingOld.setLocalPort(natTraverseMapping.getLocalPort());
+        natTraverseMappingService.updateNATTraverseMapping(natTraverseMappingOld);
 
         return new ActionResult(true,null);
     }

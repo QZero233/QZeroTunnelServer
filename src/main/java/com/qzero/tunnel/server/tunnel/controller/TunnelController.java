@@ -37,11 +37,12 @@ public class TunnelController {
 
     @PostMapping("/{tunnel_port}")
     public ActionResult newTunnel(@PathVariable("tunnel_port") int tunnelPort,
-                                  @RequestParam("crypto_module_name") String cryptoModuleName,
-                                  @RequestParam("tunnel_type") int tunnelType,
+                                  @RequestBody TunnelConfig tunnelConfig,
                                   @RequestHeader("username") String username) throws ResponsiveException{
 
-        tunnelService.newTunnel(new TunnelConfig(tunnelPort,username,cryptoModuleName,tunnelType));
+        tunnelConfig.setTunnelPort(tunnelPort);
+        tunnelConfig.setTunnelOwner(username);
+        tunnelService.newTunnel(tunnelConfig);
         return new ActionResult(true,null);
     }
 

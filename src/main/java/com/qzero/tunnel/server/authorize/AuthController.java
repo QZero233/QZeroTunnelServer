@@ -15,17 +15,15 @@ public class AuthController {
     private AuthorizeService authorizeHelper;
 
     @PostMapping("/login")
-    public ActionResult login(@RequestParam("username") String username,
-                              @RequestParam("password_hash") String passwordHash) throws ResponsiveException {
+    public ActionResult login(@RequestBody TunnelUser tunnelUser) throws ResponsiveException {
 
-        String tokenId= authorizeHelper.login(new TunnelUser(username,passwordHash));
+        String tokenId= authorizeHelper.login(tunnelUser);
         return new ActionResult(true,tokenId);
     }
 
     @PostMapping("/register")
-    public ActionResult register(@RequestParam("username") String username,
-                                 @RequestParam("password_hash") String passwordHash) throws ResponsiveException {
-        authorizeHelper.addUser(new TunnelUser(username,passwordHash));
+    public ActionResult register(@RequestBody TunnelUser tunnelUser) throws ResponsiveException {
+        authorizeHelper.addUser(tunnelUser);
 
         return new ActionResult(true,null);
     }

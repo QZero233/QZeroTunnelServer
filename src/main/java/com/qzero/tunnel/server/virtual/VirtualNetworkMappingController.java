@@ -14,9 +14,8 @@ public class VirtualNetworkMappingController {
     private VirtualNetworkMappingService service;
 
     @PostMapping("/")
-    public ActionResult newNATTraverseMapping(@RequestParam("dst_identity") String dstIdentity,
-                                              @RequestParam("dst_username") String dstUsername) throws ResponsiveException {
-        service.addMapping(new VirtualNetworkMapping(dstIdentity,dstUsername));
+    public ActionResult newNATTraverseMapping(@RequestBody VirtualNetworkMapping virtualNetworkMapping) throws ResponsiveException {
+        service.addMapping(virtualNetworkMapping);
         return new ActionResult(true,null);
     }
 
@@ -28,8 +27,9 @@ public class VirtualNetworkMappingController {
 
     @PutMapping("/{dst_identity}")
     public ActionResult updateNATTraverseMapping(@PathVariable("dst_identity") String dstIdentity,
-                                                    @RequestParam("dst_username") String dstUsername) throws ResponsiveException {
-        service.updateMapping(new VirtualNetworkMapping(dstIdentity,dstUsername));
+                                                 @RequestBody VirtualNetworkMapping virtualNetworkMapping) throws ResponsiveException {
+        virtualNetworkMapping.setDstIdentity(dstIdentity);
+        service.updateMapping(virtualNetworkMapping);
         return new ActionResult(true,null);
     }
 
